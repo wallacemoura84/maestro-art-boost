@@ -5,14 +5,14 @@ export const Route = createFileRoute("/teoria-musical")({
   head: () => ({
     meta: [
       {
-        title: "Curso de Teoria Musical — Maestro Wallace Moura",
+        title: "Curso de Música — Maestro Wallace Moura",
       },
       {
         name: "description",
         content:
-          "Curso de teoria musical e aulas de música com o Maestro Wallace Moura: piano, teclado, regência coral e orquestral, harmonia, orquestração e história da música. Do iniciante ao avançado, online ou presencial em Belo Horizonte/MG. R$100 a hora-aula.",
+          "Curso de música com o Maestro Wallace Moura: piano, teclado, regência coral e orquestral, teoria musical, harmonia, orquestração e história da música. Do iniciante ao avançado, online ou presencial em Belo Horizonte/MG. R$100 a hora-aula.",
       },
-      { property: "og:title", content: "Curso de Teoria Musical — Maestro Wallace Moura" },
+      { property: "og:title", content: "Curso de Música — Maestro Wallace Moura" },
       {
         property: "og:description",
         content:
@@ -89,7 +89,7 @@ function TeoriaMusical() {
             Aulas de música · Online e presencial
           </span>
           <h1 className="max-w-3xl font-serif text-6xl leading-[0.95] tracking-tight text-ink md:text-7xl">
-            Curso de teoria musical
+            Curso de música
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed text-soft">
             Aulas de música com o Maestro Wallace Moura, regente e educador
