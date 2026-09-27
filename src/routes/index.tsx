@@ -23,7 +23,14 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: () => getLatestVideos(),
+  loader: async () => {
+    try {
+      return await getLatestVideos();
+    } catch {
+      // Falha de rede/RPC não deve derrubar a página inteira.
+      return [];
+    }
+  },
   component: Index,
 });
 
