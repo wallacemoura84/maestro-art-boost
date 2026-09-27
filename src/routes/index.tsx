@@ -41,6 +41,11 @@ const CONTATO = {
   linkedin: "https://www.linkedin.com/in/wallacemouraa/",
   youtube: "https://www.youtube.com/@maestrowallacemoura",
   dulci: "https://www.youtube.com/@dulcisonum",
+  novena:
+    "https://youtube.com/playlist?list=OLAK5uy_m7_Dk7puVYnj-FCueBpKagLVPlCZZha98",
+  isabelCristina: "https://www.youtube.com/watch?v=6yTWbJhfA98",
+  seminario: "https://www.youtube.com/watch?v=hM_6ZfGN_gs",
+  congressoEucaristico: "https://www.youtube.com/watch?v=w4_RFnnYUBI",
   congressos: "https://www.youtube.com/watch?v=YAMog1c75yQ&list=PLeS-LqFLdJIk",
   lattes: "http://lattes.cnpq.br/9393480660650652",
   agendamento: "https://reservahorario.com.br/maestro-wallace-aulas-de-musica",
@@ -200,7 +205,7 @@ function Index() {
             Discografia
           </span>
           <h2 className="font-serif text-4xl text-ink">
-             Vídeos mais recentes do canal
+            Gravações e composições
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
             <img
@@ -209,47 +214,83 @@ function Index() {
               loading="lazy"
               width={1600}
               height={1200}
-              className="aspect-square w-full rounded-3xl object-cover"
+              className="aspect-square w-full rounded-3xl object-cover md:sticky md:top-28 md:self-start"
             />
             <div className="space-y-5">
-               {videos.length > 0 ? videos.map((video) => (
-                 <a
-                   key={video.id}
-                   href={`https://www.youtube.com/watch?v=${video.id}`}
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   className="glass flex items-center gap-4 rounded-3xl p-5 shadow-sm transition hover:bg-card/70"
-                 >
-                   <img
-                     src={`https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`}
-                     alt=""
-                     loading="lazy"
-                     width={320}
-                     height={180}
-                     className="size-20 shrink-0 rounded-2xl object-cover"
-                   />
-                   <div className="min-w-0">
-                     <h3 className="font-serif text-xl text-ink">{video.title}</h3>
-                     <p className="mt-1 text-xs text-soft">
-                       {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(video.published))} · YouTube ↗
-                     </p>
-                   </div>
-                 </a>
-               )) : (
-                 <p className="text-sm leading-relaxed text-soft">
-                   As próximas publicações do canal aparecerão aqui.
-                 </p>
-               )}
-              <a
-                 href={CONTATO.dulci}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
-              >
-                 Conheça o canal →
-              </a>
+              {discografia.map((item) => (
+                <a
+                  key={item.titulo}
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="glass flex items-center gap-4 rounded-3xl p-5 shadow-sm transition hover:bg-card/70"
+                >
+                  <img
+                    src={item.thumb}
+                    alt=""
+                    loading="lazy"
+                    width={320}
+                    height={180}
+                    className="size-20 shrink-0 rounded-2xl object-cover"
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-serif text-xl text-ink">{item.titulo}</h3>
+                    <p className="mt-1 text-xs text-soft">
+                      {item.detalhe} · YouTube ↗
+                    </p>
+                  </div>
+                </a>
+              ))}
             </div>
           </div>
+        </section>
+
+        {/* Canal Dulci Sonum */}
+        <section id="dulci-sonum" className="space-y-8 scroll-mt-28 py-8">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+            Canal no YouTube
+          </span>
+          <h2 className="font-serif text-4xl text-ink">
+            Canal Dulci Sonum — Música Litúrgica
+          </h2>
+          <div className="grid gap-5 md:grid-cols-2">
+            {videos.length > 0 ? videos.map((video) => (
+              <a
+                key={video.id}
+                href={`https://www.youtube.com/watch?v=${video.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass flex items-center gap-4 rounded-3xl p-5 shadow-sm transition hover:bg-card/70"
+              >
+                <img
+                  src={`https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`}
+                  alt=""
+                  loading="lazy"
+                  width={320}
+                  height={180}
+                  className="size-20 shrink-0 rounded-2xl object-cover"
+                />
+                <div className="min-w-0">
+                  <h3 className="font-serif text-xl text-ink">{video.title}</h3>
+                  <p className="mt-1 text-xs text-soft">
+                    {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(video.published))} · YouTube ↗
+                  </p>
+                </div>
+              </a>
+            )) : (
+              <p className="text-sm leading-relaxed text-soft">
+                As próximas publicações do canal aparecerão aqui.
+              </p>
+            )}
+          </div>
+          <a
+            href={CONTATO.dulci}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
+          >
+            Conheça o canal →
+          </a>
         </section>
 
         {/* Pesquisa */}
