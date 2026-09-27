@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import heroMaestro from "@/assets/wallace-regente.jpg.asset.json";
 import albumMain from "@/assets/wallace-orgao-maos.jpg.asset.json";
-import albumCerruti from "@/assets/wallace-orgao-corfo.jpg.asset.json";
-import albumDulci from "@/assets/wallace-orquestra.jpg.asset.json";
+import { getLatestVideos } from "@/lib/youtube.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,6 +22,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: () => getLatestVideos(),
   component: Index,
 });
 
@@ -44,7 +44,7 @@ const formacao = [
   },
   {
     numero: "02",
-    titulo: "Regência Coral",
+    titulo: "Especialista em Regência Coral",
     texto:
       "Pós-graduado em Regência Coral com Capacitação à Docência, com foco em formação e repertório vocal.",
   },
@@ -63,12 +63,14 @@ const disciplinas = [
   { nome: "Percepção Musical", detalhe: "Ouvido e ditados" },
   { nome: "Harmonia", detalhe: "Progressões e cadências" },
   { nome: "História da Música", detalhe: "Contextos e períodos" },
-  { nome: "Preparação Vestibular", detalhe: "Provas de música" },
+  { nome: "Preparação Vestibular", detalhe: "Provas de música para curso superior ou concursos militares" },
 ];
 
 
 
 function Index() {
+  const loadedVideos = Route.useLoaderData();
+  const videos = Array.isArray(loadedVideos) ? loadedVideos : [];
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-ink antialiased">
       {/* Fundo em gradiente com brumas de cor */}
@@ -189,7 +191,7 @@ function Index() {
             Discografia
           </span>
           <h2 className="font-serif text-4xl text-ink">
-            Gravações e o canal Dulci Sonum
+             Vídeos mais recentes do canal
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
             <img
@@ -201,49 +203,41 @@ function Index() {
               className="aspect-square w-full rounded-3xl object-cover"
             />
             <div className="space-y-5">
-              <div className="glass flex gap-4 rounded-3xl p-5 shadow-sm">
-                <img
-                  src={albumCerruti.url}
-                  alt="Wallace Moura ao órgão acompanhando o coro"
-                  loading="lazy"
-                  width={1600}
-                  height={1200}
-                  className="size-20 shrink-0 rounded-2xl object-cover"
-                />
-                <div>
-                  <h3 className="font-serif text-xl text-ink">
-                    Cerruti — Missa Sacra
-                  </h3>
-                  <p className="text-sm text-soft">
-                    2023 · Coro e Instrumental · 34 min
-                  </p>
-                </div>
-              </div>
-              <div className="glass flex gap-4 rounded-3xl p-5 shadow-sm">
-                <img
-                  src={albumDulci.url}
-                  alt="Wallace Moura regendo orquestra"
-                  loading="lazy"
-                  width={1440}
-                  height={1800}
-                  className="size-20 shrink-0 rounded-2xl object-cover"
-                />
-                <div>
-                  <h3 className="font-serif text-xl text-ink">
-                    Dulci Sonum — Vol. I
-                  </h3>
-                  <p className="text-sm text-soft">
-                    2024 · Repertório sacro · canal no YouTube
-                  </p>
-                </div>
-              </div>
+               {videos.length > 0 ? videos.map((video) => (
+                 <a
+                   key={video.id}
+                   href={`https://www.youtube.com/watch?v=${video.id}`}
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="glass flex items-center gap-4 rounded-3xl p-5 shadow-sm transition hover:bg-card/70"
+                 >
+                   <img
+                     src={`https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`}
+                     alt=""
+                     loading="lazy"
+                     width={320}
+                     height={180}
+                     className="size-20 shrink-0 rounded-2xl object-cover"
+                   />
+                   <div className="min-w-0">
+                     <h3 className="font-serif text-xl text-ink">{video.title}</h3>
+                     <p className="mt-1 text-xs text-soft">
+                       {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(video.published))} · YouTube ↗
+                     </p>
+                   </div>
+                 </a>
+               )) : (
+                 <p className="text-sm leading-relaxed text-soft">
+                   As próximas publicações do canal aparecerão aqui.
+                 </p>
+               )}
               <a
                 href={CONTATO.youtube}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
               >
-                Ouvir no YouTube →
+                 Conheça o canal →
               </a>
             </div>
           </div>
@@ -259,12 +253,12 @@ function Index() {
                   Pesquisa acadêmica
                 </span>
                 <h2 className="font-serif text-4xl leading-tight text-ink">
-                  A Seconda Messa de Giuseppe Cerruti na América Latina
+                   Entre a ausência do original e a performance de cópias: A Seconda Messa de Giuseppe Cerruti e seus testemunhos fragmentários na América do Sul
                 </h2>
                 <p className="max-w-xl text-soft">
-                  Estudo sobre a difusão e o legado da obra de Cerruti no
-                  continente, articulando fontes históricas, manuscritos e a
-                  prática coral contemporânea.
+                   Estudo sobre a difusão da Seconda Messa de Cerruti no continente
+                   americano, articulando fontes históricas, manuscritos, suas
+                   adaptações, hemerografia e a prática coral.
                 </p>
               </div>
               <div className="glass space-y-3 rounded-3xl p-6">
