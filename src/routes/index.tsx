@@ -32,6 +32,9 @@ const CONTATO = {
   instagram: "https://instagram.com/maestrowallace.art",
   linkedin: "https://www.linkedin.com/in/wallacemouraa/",
   youtube: "https://www.youtube.com/@maestrowallacemoura",
+  dulci: "https://www.youtube.com/@dulcisonum",
+  congressos: "https://www.youtube.com/watch?v=YAMog1c75yQ&list=PLeS-LqFLdJIk",
+  lattes: "http://lattes.cnpq.br/9393480660650652",
   agendamento: "https://reservahorario.com.br/maestro-wallace-aulas-de-musica",
 };
 
@@ -229,7 +232,7 @@ function Index() {
                  </p>
                )}
               <a
-                href={CONTATO.youtube}
+                 href={CONTATO.dulci}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
@@ -265,12 +268,22 @@ function Index() {
                 <p className="text-sm text-ink">
                   Mestrado em Música — Música e Cultura
                 </p>
-                <p className="text-sm text-ink">
-                  Organista da Mitra Arquidiocesana de BH
-                </p>
-                <p className="text-sm text-ink">
-                  Publicação em andamento sobre repertório sacro
-                </p>
+                <a
+                  href={CONTATO.congressos}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
+                >
+                  Participações em congressos (YouTube) →
+                </a>
+                <a
+                  href={CONTATO.lattes}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
+                >
+                  Currículo Lattes →
+                </a>
               </div>
             </div>
           </div>
