@@ -73,6 +73,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -84,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Regente, pesquisador e educador musical em Belo Horizonte. Aulas de piano, regência, teoria e preparação para vestibular de música.",
       },
       { name: "author", content: "Wallace Moura" },
-      { property: "og:title", content: "Maestro Wallace Moura" },
+      { property: "og:title", content: "Maestro Wallace Moura — Regência, Pesquisa e Educação Musical" },
       {
         property: "og:description",
         content:
