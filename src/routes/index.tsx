@@ -84,6 +84,33 @@ const disciplinas = [
 
 
 
+const discografia = [
+  {
+    titulo: "Novena de Nossa Senhora da Boa Morte",
+    detalhe: "Gravação sob a regência de Wallace Moura",
+    link: CONTATO.novena,
+    thumb: "https://i.ytimg.com/vi/rr4IHA3e3AU/mqdefault.jpg",
+  },
+  {
+    titulo: "Hino da Beata Isabel Cristina",
+    detalhe: "Composição de Wallace Moura",
+    link: CONTATO.isabelCristina,
+    thumb: "https://i.ytimg.com/vi/6yTWbJhfA98/mqdefault.jpg",
+  },
+  {
+    titulo: "Hino do Seminário Arquidiocesano de São José",
+    detalhe: "Arquidiocese de Mariana/MG · composição de Wallace Moura",
+    link: CONTATO.seminario,
+    thumb: "https://i.ytimg.com/vi/hM_6ZfGN_gs/mqdefault.jpg",
+  },
+  {
+    titulo: "Hino do 19º Congresso Eucarístico Nacional",
+    detalhe: "Composição de Wallace Moura",
+    link: CONTATO.congressoEucaristico,
+    thumb: "https://i.ytimg.com/vi/w4_RFnnYUBI/mqdefault.jpg",
+  },
+];
+
 function Index() {
   const loadedVideos = Route.useLoaderData();
   const videos = Array.isArray(loadedVideos) ? loadedVideos : [];
