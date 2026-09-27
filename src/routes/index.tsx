@@ -67,26 +67,6 @@ const disciplinas = [
 ];
 
 
-const depoimentos = [
-  {
-    texto:
-      "Aprendi regência com um rigor raro e uma paciência que transforma.",
-    nome: "Ana Beatriz S.",
-    papel: "Aluna de Regência",
-  },
-  {
-    texto:
-      "Preparou minha prova de harmonia com clareza. Aproveitei no vestibular.",
-    nome: "Rafael M.",
-    papel: "Vestibular de Música",
-  },
-  {
-    texto:
-      "O canal Dulci Sonum e as aulas de teoria me deram uma nova base.",
-    nome: "Cecília T.",
-    papel: "Pianista",
-  },
-];
 
 function Index() {
   return (
@@ -339,31 +319,6 @@ function Index() {
         </section>
 
 
-        {/* Depoimentos */}
-        <section className="space-y-8 py-16">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
-            Depoimentos
-          </span>
-          <h2 className="font-serif text-4xl text-ink">O que dizem os alunos</h2>
-          <div className="grid gap-5 md:grid-cols-3">
-            {depoimentos.map((d) => (
-              <figure key={d.nome} className="glass rounded-3xl p-6 shadow-sm">
-                <blockquote className="font-serif text-lg leading-snug text-ink">
-                  “{d.texto}”
-                </blockquote>
-                <figcaption className="mt-4 flex items-center gap-3">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate/15 font-serif text-sm font-semibold text-slate">
-                    {d.nome.split(" ").map((p) => p[0]).join("").slice(0, 2)}
-                  </span>
-                  <div className="text-sm">
-                    <p className="font-semibold text-ink">{d.nome}</p>
-                    <p className="text-soft">{d.papel}</p>
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
 
         {/* Contato */}
         <section id="contato" className="scroll-mt-28 py-8 pb-20">
@@ -409,63 +364,23 @@ function Index() {
                   </a>
                 </div>
               </div>
-              <form
-                className="space-y-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget;
-                  const nome = (form.elements.namedItem("nome") as HTMLInputElement).value;
-                  const disciplina = (form.elements.namedItem("disciplina") as HTMLSelectElement).value;
-                  const mensagem = (form.elements.namedItem("mensagem") as HTMLTextAreaElement).value;
-                  const texto = encodeURIComponent(
-                    `Olá, Maestro! Meu nome é ${nome}. Tenho interesse em aulas de ${disciplina}. ${mensagem}`,
-                  );
-                  window.open(`https://wa.link/875i9h?text=${texto}`, "_blank");
-                }}
-              >
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-soft">
-                    Nome
-                  </label>
-                  <input
-                    name="nome"
-                    type="text"
-                    required
-                    placeholder="Seu nome"
-                    className="glass rounded-2xl px-4 py-3 text-sm text-ink outline-none placeholder:text-soft/70 focus:border-slate/50"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-soft">
-                    Disciplina
-                  </label>
-                  <select
-                    name="disciplina"
-                    className="glass rounded-2xl px-4 py-3 text-sm text-ink outline-none focus:border-slate/50"
-                  >
-                    {disciplinas.map((d) => (
-                      <option key={d.nome}>{d.nome}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-soft">
-                    Mensagem
-                  </label>
-                  <textarea
-                    name="mensagem"
-                    rows={3}
-                    placeholder="Conte seus objetivos"
-                    className="glass rounded-2xl px-4 py-3 text-sm text-ink outline-none placeholder:text-soft/70 focus:border-slate/50"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full rounded-2xl bg-ink px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-ink/90"
+              <div className="glass space-y-4 self-start rounded-3xl p-6">
+                <p className="text-sm leading-relaxed text-soft">
+                  Escolha a disciplina, veja os horários disponíveis e reserve
+                  sua aula direto na agenda do Maestro.
+                </p>
+                <a
+                  href={CONTATO.agendamento}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block w-full rounded-2xl bg-ink px-6 py-3.5 text-center text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-ink/90"
                 >
                   Agende uma aula
-                </button>
-              </form>
+                </a>
+                <p className="text-center text-xs text-soft">
+                  reservahorario.com.br/maestro-wallace-aulas-de-musica
+                </p>
+              </div>
             </div>
           </div>
         </section>
