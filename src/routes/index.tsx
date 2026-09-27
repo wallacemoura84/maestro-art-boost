@@ -333,7 +333,7 @@ function Index() {
             href="/teoria-musical"
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
           >
-            Saiba mais sobre o curso de teoria musical →
+            Saiba mais sobre o curso de música do Maestro Wallace Moura →
           </a>
         </section>
 
