@@ -93,7 +93,7 @@ function Index() {
               <a href="#trajetoria" className="hover:text-ink">Trajetória</a>
               <a href="#discografia" className="hover:text-ink">Discografia</a>
               <a href="#pesquisa" className="hover:text-ink">Pesquisa</a>
-              <a href="/teoria-musical" className="hover:text-ink">Curso de teoria musical</a>
+              <a href="/teoria-musical" className="hover:text-ink">Curso de música</a>
             </div>
             <a
               href={CONTATO.agendamento}
