@@ -69,26 +69,6 @@ const disciplinas = [
   { nome: "Preparação Vestibular", detalhe: "Provas de música" },
 ];
 
-const concertos = [
-  {
-    dia: "12",
-    mes: "mar",
-    titulo: "Concerto Sacro — Cerruti",
-    local: "Catedral da Sé · 20h",
-  },
-  {
-    dia: "26",
-    mes: "abr",
-    titulo: "Recital de Regência Coral",
-    local: "Teatro Municipal de BH · 19h30",
-  },
-  {
-    dia: "05",
-    mes: "mai",
-    titulo: "Missa — Dulci Sonum",
-    local: "Mitra Arquidiocesana · 19h",
-  },
-];
 
 const depoimentos = [
   {
@@ -133,7 +113,6 @@ function Index() {
               <a href="#trajetoria" className="hover:text-ink">Trajetória</a>
               <a href="#discografia" className="hover:text-ink">Discografia</a>
               <a href="#pesquisa" className="hover:text-ink">Pesquisa</a>
-              <a href="#concertos" className="hover:text-ink">Concertos</a>
             </div>
             <a
               href={CONTATO.agendamento}
@@ -365,42 +344,6 @@ function Index() {
           </div>
         </section>
 
-        {/* Concertos */}
-        <section id="concertos" className="space-y-8 scroll-mt-28 py-8">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
-            Agenda
-          </span>
-          <h2 className="font-serif text-4xl text-ink">Próximos concertos</h2>
-          <div className="space-y-3">
-            {concertos.map((c) => (
-              <div
-                key={c.titulo}
-                className="glass flex flex-col gap-1 rounded-3xl px-6 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-ink/5 font-serif text-lg text-ink">
-                    {c.dia}
-                    <span className="block font-sans text-[10px] uppercase tracking-wide text-soft">
-                      {c.mes}
-                    </span>
-                  </span>
-                  <div>
-                    <h3 className="font-serif text-xl text-ink">{c.titulo}</h3>
-                    <p className="text-sm text-soft">{c.local}</p>
-                  </div>
-                </div>
-                <a
-                  href={CONTATO.whatsapp}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm font-semibold text-slate hover:text-ink"
-                >
-                  Reservar
-                </a>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* Depoimentos */}
         <section className="space-y-8 py-16">
