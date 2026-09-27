@@ -93,6 +93,7 @@ function Index() {
               <a href="#trajetoria" className="hover:text-ink">Trajetória</a>
               <a href="#discografia" className="hover:text-ink">Discografia</a>
               <a href="#pesquisa" className="hover:text-ink">Pesquisa</a>
+              <a href="/teoria-musical" className="hover:text-ink">Curso de teoria musical</a>
             </div>
             <a
               href={CONTATO.agendamento}
@@ -321,6 +322,12 @@ function Index() {
               </div>
             ))}
           </div>
+          <a
+            href="/teoria-musical"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate hover:text-ink"
+          >
+            Saiba mais sobre o curso de teoria musical →
+          </a>
         </section>
 
 
