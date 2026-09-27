@@ -163,9 +163,9 @@ function Index() {
             <div className="absolute -inset-3 -z-10 rounded-[2rem] bg-gradient-to-br from-slate/30 to-gold/30 blur-xl" />
             <div className="glass-strong overflow-hidden rounded-[2rem] p-2 shadow-2xl">
               <img
-                src={heroMaestro}
-                alt="Maestro regendo sob luz de palco"
-                width={1024}
+                src={heroMaestro.url}
+                alt="Maestro Wallace Moura regendo com a batuta"
+                width={853}
                 height={1280}
                 className="aspect-[4/5] w-full rounded-3xl object-cover"
               />
@@ -213,21 +213,21 @@ function Index() {
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
             <img
-              src={albumMain}
-              alt="Capa de álbum de música sacra"
+              src={albumMain.url}
+              alt="Maestro Wallace Moura ao órgão"
               loading="lazy"
-              width={1024}
-              height={1024}
+              width={1600}
+              height={1200}
               className="aspect-square w-full rounded-3xl object-cover"
             />
             <div className="space-y-5">
               <div className="glass flex gap-4 rounded-3xl p-5 shadow-sm">
                 <img
-                  src={albumCerruti}
-                  alt="Capa do álbum Cerruti — Missa Sacra"
+                  src={albumCerruti.url}
+                  alt="Wallace Moura ao órgão acompanhando o coro"
                   loading="lazy"
-                  width={512}
-                  height={512}
+                  width={1600}
+                  height={1200}
                   className="size-20 shrink-0 rounded-2xl object-cover"
                 />
                 <div>
@@ -241,11 +241,11 @@ function Index() {
               </div>
               <div className="glass flex gap-4 rounded-3xl p-5 shadow-sm">
                 <img
-                  src={albumDulci}
-                  alt="Capa do álbum Dulci Sonum — Vol. I"
+                  src={albumDulci.url}
+                  alt="Wallace Moura regendo orquestra"
                   loading="lazy"
-                  width={512}
-                  height={512}
+                  width={1440}
+                  height={1800}
                   className="size-20 shrink-0 rounded-2xl object-cover"
                 />
                 <div>
@@ -352,14 +352,9 @@ function Index() {
                   “{d.texto}”
                 </blockquote>
                 <figcaption className="mt-4 flex items-center gap-3">
-                  <img
-                    src={d.foto}
-                    alt={`Foto de ${d.nome}`}
-                    loading="lazy"
-                    width={512}
-                    height={512}
-                    className="size-10 shrink-0 rounded-full object-cover"
-                  />
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate/15 font-serif text-sm font-semibold text-slate">
+                    {d.nome.split(" ").map((p) => p[0]).join("").slice(0, 2)}
+                  </span>
                   <div className="text-sm">
                     <p className="font-semibold text-ink">{d.nome}</p>
                     <p className="text-soft">{d.papel}</p>
