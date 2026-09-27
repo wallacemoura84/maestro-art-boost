@@ -483,7 +483,7 @@ function Index() {
             <a href={CONTATO.instagram} target="_blank" rel="noreferrer" className="hover:text-ink">
               Instagram
             </a>
-            <a href={CONTATO.youtube} target="_blank" rel="noreferrer" className="hover:text-ink">
+            <a href={CONTATO.dulci} target="_blank" rel="noreferrer" className="hover:text-ink">
               YouTube
             </a>
             <a href={CONTATO.linkedin} target="_blank" rel="noreferrer" className="hover:text-ink">
