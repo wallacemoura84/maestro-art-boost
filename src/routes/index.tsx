@@ -69,7 +69,8 @@ const disciplinas = [
 
 
 function Index() {
-  const videos = Route.useLoaderData();
+  const loadedVideos = Route.useLoaderData();
+  const videos = Array.isArray(loadedVideos) ? loadedVideos : [];
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-ink antialiased">
       {/* Fundo em gradiente com brumas de cor */}
