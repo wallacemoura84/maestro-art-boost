@@ -5,6 +5,7 @@ import albumMain from "@/assets/wallace-orgao-maos.jpg.asset.json";
 import { getLatestVideos } from "@/lib/youtube.functions";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Maestro Wallace Moura — Regência, Pesquisa e Educação Musical" },
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/")({
         content:
           "Regente, organista da Mitra Arquidiocesana de Belo Horizonte e educador musical. Aulas de piano, regência, teoria, harmonia e preparação para vestibular de música.",
       },
-      { property: "og:title", content: "Maestro Wallace Moura" },
+      { property: "og:title", content: "Maestro Wallace Moura — Regência, Pesquisa e Educação Musical" },
       {
         property: "og:description",
         content: "Regência · Pesquisa · Educação Musical — Belo Horizonte, MG.",
