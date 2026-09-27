@@ -1,12 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import heroMaestro from "@/assets/hero-maestro.jpg";
-import albumMain from "@/assets/album-main.jpg";
-import albumCerruti from "@/assets/album-cerruti.jpg";
-import albumDulci from "@/assets/album-dulci.jpg";
-import alunaAna from "@/assets/aluna-ana.jpg";
-import alunoRafael from "@/assets/aluno-rafael.jpg";
-import alunaCecilia from "@/assets/aluna-cecilia.jpg";
+import heroMaestro from "@/assets/wallace-regente.jpg.asset.json";
+import albumMain from "@/assets/wallace-orgao-maos.jpg.asset.json";
+import albumCerruti from "@/assets/wallace-orgao-corfo.jpg.asset.json";
+import albumDulci from "@/assets/wallace-orquestra.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -76,21 +73,18 @@ const depoimentos = [
       "Aprendi regência com um rigor raro e uma paciência que transforma.",
     nome: "Ana Beatriz S.",
     papel: "Aluna de Regência",
-    foto: alunaAna,
   },
   {
     texto:
       "Preparou minha prova de harmonia com clareza. Aproveitei no vestibular.",
     nome: "Rafael M.",
     papel: "Vestibular de Música",
-    foto: alunoRafael,
   },
   {
     texto:
       "O canal Dulci Sonum e as aulas de teoria me deram uma nova base.",
     nome: "Cecília T.",
     papel: "Pianista",
-    foto: alunaCecilia,
   },
 ];
 
