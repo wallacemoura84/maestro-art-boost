@@ -36,7 +36,7 @@ export const getLatestVideos = createServerFn({ method: "GET" }).handler(async (
         return id && title && published ? { id, title: decodeXml(title), published } : null;
       })
       .filter((video): video is ChannelVideo => video !== null)
-      .slice(0, 2);
+      .slice(0, 5);
 
     cached = { videos, expires: Date.now() + 10 * 60_000 };
     return videos;
