@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 export type ChannelVideo = { id: string; title: string; published: string };
 
-const CHANNEL_ID = "UC2G-4bthtShSyknAF0JQmOQ";
+const CHANNEL_ID = "UCxWjKHHt-nIHqsYIffwG-kw";
 let cached: { expires: number; videos: ChannelVideo[] } | undefined;
 
 function decodeXml(value: string) {

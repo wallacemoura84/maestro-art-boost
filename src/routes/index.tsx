@@ -166,9 +166,6 @@ function Index() {
                 Formação e trajetória
               </h2>
             </div>
-            <p className="hidden max-w-xs text-sm text-soft md:block">
-              Um percurso entre o púlpito, a sala de aula e a pesquisa.
-            </p>
           </div>
           <div className="grid gap-5 md:grid-cols-3">
             {formacao.map((item) => (
