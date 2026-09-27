@@ -190,7 +190,7 @@ function Index() {
             Discografia
           </span>
           <h2 className="font-serif text-4xl text-ink">
-            Gravações e o canal Dulci Sonum
+             Vídeos mais recentes do canal
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
             <img

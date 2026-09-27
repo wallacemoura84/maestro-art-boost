@@ -28,7 +28,8 @@ export const getLatestVideos = createServerFn({ method: "GET" }).handler(async (
     if (!response.ok) throw new Error(`YouTube feed: ${response.status}`);
     const xml = await response.text();
     const videos = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)]
-      .map(([, entry]) => {
+      .map((match) => {
+        const entry = match[1] ?? "";
         const id = entry.match(/<yt:videoId>([\w-]{11})<\/yt:videoId>/)?.[1];
         const title = entry.match(/<title>([\s\S]*?)<\/title>/)?.[1];
         const published = entry.match(/<published>([^<]+)<\/published>/)?.[1];
