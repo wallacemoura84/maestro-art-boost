@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FerramentasAudioRouteImport } from './routes/ferramentas-audio'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TeoriaMusicalRouteImport } from './routes/teoria-musical'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FerramentasAudioRoute = FerramentasAudioRouteImport.update({
+  id: '/ferramentas-audio',
+  path: '/ferramentas-audio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -31,30 +37,35 @@ const TeoriaMusicalRoute = TeoriaMusicalRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ferramentas-audio': typeof FerramentasAudioRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/teoria-musical': typeof TeoriaMusicalRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ferramentas-audio': typeof FerramentasAudioRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/teoria-musical': typeof TeoriaMusicalRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ferramentas-audio': typeof FerramentasAudioRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/teoria-musical': typeof TeoriaMusicalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sitemap.xml' | '/teoria-musical'
+  fullPaths: '/' | '/ferramentas-audio' | '/sitemap.xml' | '/teoria-musical'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sitemap.xml' | '/teoria-musical'
-  id: '__root__' | '/' | '/sitemap.xml' | '/teoria-musical'
+  to: '/' | '/ferramentas-audio' | '/sitemap.xml' | '/teoria-musical'
+  id:
+    '__root__' | '/' | '/ferramentas-audio' | '/sitemap.xml' | '/teoria-musical'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FerramentasAudioRoute: typeof FerramentasAudioRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TeoriaMusicalRoute: typeof TeoriaMusicalRoute
 }
@@ -66,6 +77,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ferramentas-audio': {
+      id: '/ferramentas-audio'
+      path: '/ferramentas-audio'
+      fullPath: '/ferramentas-audio'
+      preLoaderRoute: typeof FerramentasAudioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -87,6 +105,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FerramentasAudioRoute: FerramentasAudioRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TeoriaMusicalRoute: TeoriaMusicalRoute,
 }
