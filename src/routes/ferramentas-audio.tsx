@@ -634,6 +634,8 @@ const EQUIVALENCES = [
   { label: "𝅗𝅥 = ♩", from: 2, to: 1 },
 ];
 const POLY_RATIOS = [{ top: 3, bottom: 2 }, { top: 2, bottom: 3 }, { top: 4, bottom: 3 }, { top: 3, bottom: 4 }, { top: 5, bottom: 4 }, { top: 4, bottom: 5 }, { top: 5, bottom: 3 }, { top: 7, bottom: 4 }];
+const DEFAULT_METER = { id: "3/4", beats: 3, unit: 4, groups: [[3]] };
+const DEFAULT_RATIO = { top: 3, bottom: 2 };
 const SOUNDS = [
   { id: "click", name: "Clique (padrão)" },
   { id: "bell", name: "Sino" },
@@ -682,9 +684,9 @@ function playTick(ctx: AudioContext, time: number, sound: string, volume: number
 function Metronome() {
   const [bpm, setBpm] = useState(60);
   const [meterId, setMeterId] = useState("3/4");
-  const meter = METERS.find((m) => m.id === meterId) ?? METERS[2];
+  const meter = METERS.find((m) => m.id === meterId) ?? DEFAULT_METER;
   const [groupIndex, setGroupIndex] = useState(0);
-  const groups = meter.groups[groupIndex] ?? meter.groups[0];
+  const groups = meter.groups[groupIndex] ?? meter.groups[0] ?? [meter.beats];
   const [subdivision, setSubdivision] = useState(1);
   const [pulseNote, setPulseNote] = useState("quarter");
   const [equivalence, setEquivalence] = useState(0);
@@ -726,9 +728,9 @@ function Metronome() {
     tapsRef.current = recent.slice(-7);
     setTapCount(tapsRef.current.length);
     if (tapsRef.current.length < 2) return;
-    const gaps = tapsRef.current.slice(1).map((t, i) => t - tapsRef.current[i]);
+    const gaps = tapsRef.current.slice(1).map((t, i) => t - (tapsRef.current[i] ?? t));
     const sorted = [...gaps].sort((a, b) => a - b);
-    const interval = sorted[Math.floor(sorted.length / 2)];
+    const interval = sorted[Math.floor(sorted.length / 2)] ?? 0;
     if (interval >= 200 && interval <= 1500) setBpm(Math.max(40, Math.min(300, Math.round(60000 / interval))));
   };
 
@@ -758,7 +760,7 @@ function Metronome() {
             }
           }
         } else if (polyMode === "ratio") {
-          const ratio = POLY_RATIOS[polyRatio];
+          const ratio = POLY_RATIOS[polyRatio] ?? DEFAULT_RATIO;
           const position = b % ratio.bottom;
           for (let i = 0; i < ratio.top; i++) {
             const offset = (i * ratio.bottom) / ratio.top - position;
@@ -822,7 +824,7 @@ function Metronome() {
             </label>
             <Btn onClick={() => {
               const item = EQUIVALENCES[equivalence];
-              setBpm((current) => Math.max(40, Math.min(300, Math.round(current * item.to / item.from))));
+              if (item) setBpm((current) => Math.max(40, Math.min(300, Math.round(current * item.to / item.from))));
             }}>Aplicar</Btn>
           </div>
         </div>
