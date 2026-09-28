@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 import heroMaestro from "@/assets/wallace-regente.jpg.asset.json";
 import albumMain from "@/assets/wallace-orgao-maos.jpg.asset.json";
@@ -114,6 +117,7 @@ const discografia = [
 function Index() {
   const loadedVideos = Route.useLoaderData();
   const videos = Array.isArray(loadedVideos) ? loadedVideos : [];
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="relative min-h-screen overflow-x-hidden font-sans text-ink antialiased">
       {/* Fundo em gradiente com brumas de cor */}
@@ -124,26 +128,51 @@ function Index() {
 
       <header className="fixed inset-x-0 top-0 z-50">
         <div className="mx-auto max-w-6xl px-5 pt-4">
-          <nav className="glass flex items-center justify-between rounded-2xl px-5 py-3 shadow-sm">
-            <a href="#" className="font-serif text-lg tracking-wide text-ink">
-              Wallace Moura<span className="text-gold">.</span>
-            </a>
-            <div className="hidden items-center gap-7 text-sm font-medium text-soft md:flex">
-              <a href="#trajetoria" className="hover:text-ink">Trajetória</a>
-              <a href="#discografia" className="hover:text-ink">Discografia</a>
-              <a href="#pesquisa" className="hover:text-ink">Pesquisa</a>
-              <a href="/teoria-musical" className="hover:text-ink">Curso de música</a>
-              <a href="/ferramentas-audio" className="hover:text-ink">Ferramentas de Áudio</a>
-              <a href="/ferramentas-musicais" className="hover:text-ink">Ferramentas Musicais</a>
+          <nav className={`${menuOpen ? "border border-border bg-background" : "glass"} rounded-2xl px-5 py-3 shadow-sm`} aria-label="Navegação principal">
+            <div className="flex items-center justify-between gap-3">
+              <Link to="/" className="font-serif text-lg tracking-wide text-ink">
+                Wallace Moura<span className="text-gold">.</span>
+              </Link>
+              <div className="hidden items-center gap-7 text-sm font-medium text-soft xl:flex">
+                <a href="#trajetoria" className="hover:text-ink">Trajetória</a>
+                <a href="#discografia" className="hover:text-ink">Discografia</a>
+                <a href="#pesquisa" className="hover:text-ink">Pesquisa</a>
+                <Link to="/teoria-musical" className="hover:text-ink">Curso de música</Link>
+                <Link to="/ferramentas-audio" className="hover:text-ink">Ferramentas de Áudio</Link>
+                <Link to="/ferramentas-musicais" className="hover:text-ink">Ferramentas Musicais</Link>
+              </div>
+              <a
+                href={CONTATO.agendamento}
+                target="_blank"
+                rel="noreferrer"
+                className="hidden rounded-full bg-ink px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition hover:bg-ink/90 xl:inline-flex"
+              >
+                Agende uma aula
+              </a>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-ink xl:hidden"
+                aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+                aria-expanded={menuOpen}
+                aria-controls="mobile-navigation"
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+              </Button>
             </div>
-            <a
-              href={CONTATO.agendamento}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition hover:bg-ink/90"
-            >
-              Agende uma aula
-            </a>
+            {menuOpen && (
+              <div id="mobile-navigation" className="mt-3 flex flex-col border-t border-border pt-2 text-sm font-medium text-ink xl:hidden">
+                <a href="#trajetoria" onClick={() => setMenuOpen(false)} className="py-2">Trajetória</a>
+                <a href="#discografia" onClick={() => setMenuOpen(false)} className="py-2">Discografia</a>
+                <a href="#pesquisa" onClick={() => setMenuOpen(false)} className="py-2">Pesquisa</a>
+                <Link to="/teoria-musical" onClick={() => setMenuOpen(false)} className="py-2">Curso de música</Link>
+                <Link to="/ferramentas-audio" onClick={() => setMenuOpen(false)} className="py-2">Ferramentas de Áudio</Link>
+                <Link to="/ferramentas-musicais" onClick={() => setMenuOpen(false)} className="py-2">Ferramentas Musicais</Link>
+                <a href={CONTATO.agendamento} target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)} className="py-2 font-semibold">Agende uma aula ↗</a>
+              </div>
+            )}
           </nav>
         </div>
       </header>
