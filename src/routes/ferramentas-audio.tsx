@@ -370,11 +370,11 @@ function Recorder() {
                   key={b.f}
                   vertical
                   label={b.l}
-                  value={eq[i]}
+                  value={eq[i]!}
                   min={-12}
                   max={12}
                   step={0.5}
-                  display={`${eq[i].toFixed(1)} dB`}
+                  display={`${eq[i]!.toFixed(1)} dB`}
                   onChange={(v) => setEq((p) => p.map((x, j) => (j === i ? v : x)))}
                 />
               ))}
@@ -438,9 +438,9 @@ async function processAudio(
     for (let i = 0; i < input.length; i += win) {
       let sum = 0;
       const end = Math.min(input.length, i + win);
-      for (let j = i; j < end; j++) sum += input[j] * input[j];
+      for (let j = i; j < end; j++) sum += input[j]! * input[j]!;
       const open = Math.sqrt(sum / (end - i)) >= thr;
-      for (let j = i; j < end; j++) out[j] = open ? input[j] : 0;
+      for (let j = i; j < end; j++) out[j] = open ? input[j]! : 0;
     }
   }
   const off = new OfflineAudioContext(src.numberOfChannels, src.length, sr);
@@ -452,7 +452,7 @@ async function processAudio(
     f.type = "peaking";
     f.frequency.value = Math.min(b.f, sr / 2 - 1);
     f.Q.value = 1.4;
-    f.gain.value = eq[i];
+    f.gain.value = eq[i]!;
     last.connect(f);
     last = f;
   });
@@ -481,7 +481,7 @@ async function processAudio(
     const g = dbToGain(-1) / peak;
     for (let ch = 0; ch < rendered.numberOfChannels; ch++) {
       const d = rendered.getChannelData(ch);
-      for (let i = 0; i < d.length; i++) d[i] *= g;
+      for (let i = 0; i < d.length; i++) d[i] = d[i]! * g;
     }
   }
   return rendered;
@@ -490,7 +490,7 @@ async function processAudio(
 function toInt16(d: Float32Array) {
   const out = new Int16Array(d.length);
   for (let i = 0; i < d.length; i++) {
-    const s = Math.max(-1, Math.min(1, d[i]));
+    const s = Math.max(-1, Math.min(1, d[i]!));
     out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
   }
   return out;
@@ -517,7 +517,7 @@ function encodeWav(buf: AudioBuffer) {
   view.setUint32(40, dataLen, true);
   let o = 44;
   for (let i = 0; i < buf.length; i++)
-    for (let c = 0; c < ch; c++, o += 2) view.setInt16(o, chans[c][i], true);
+    for (let c = 0; c < ch; c++, o += 2) view.setInt16(o, chans[c]![i]!, true);
   return new Blob([view], { type: "audio/wav" });
 }
 
@@ -800,19 +800,19 @@ function detectPitch(buf: Float32Array, sr: number, rmsThr: number) {
     c[lag] = s;
   }
   let d = 0;
-  while (d < n - 1 && c[d] > c[d + 1]) d++;
+  while (d < n - 1 && c[d]! > c[d + 1]!) d++;
   let maxV = -1,
     maxP = -1;
   for (let i = d; i < n; i++)
-    if (c[i] > maxV) {
-      maxV = c[i];
+    if (c[i]! > maxV) {
+      maxV = c[i]!;
       maxP = i;
     }
   if (maxP <= 0) return -1;
   const x1 = c[maxP - 1] ?? 0,
     x2 = c[maxP],
     x3 = c[maxP + 1] ?? 0;
-  const a = (x1 + x3 - 2 * x2) / 2;
+  const a = (x1 + x3 - 2 * x2!) / 2;
   const b = (x3 - x1) / 2;
   const T = a ? maxP - b / (2 * a) : maxP;
   const f = sr / T;
