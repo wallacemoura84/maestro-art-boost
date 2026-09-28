@@ -548,7 +548,7 @@ const PACES = [
 
 function ReadingCalculator() {
   const [text, setText] = useState("");
-  const [pace, setPace] = useState(PACES[1]);
+  const [pace, setPace] = useState(PACES[1]!);
   const [result, setResult] = useState<number | null>(null);
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
   const empty = text.length === 0;
@@ -658,7 +658,7 @@ function playTick(ctx: AudioContext, time: number, sound: string, volume: number
 
 function Metronome() {
   const [bpm, setBpm] = useState(120);
-  const [meter, setMeter] = useState(METERS[1]);
+  const [meter, setMeter] = useState(METERS[1]!);
   const [volume, setVolume] = useState(70);
   const [sound, setSound] = useState("click");
   const [status, setStatus] = useState<"stopped" | "playing" | "paused">("stopped");
@@ -796,7 +796,7 @@ function detectPitch(buf: Float32Array, sr: number, rmsThr: number) {
   const c = new Float32Array(n);
   for (let lag = 0; lag < n; lag++) {
     let s = 0;
-    for (let i = 0; i < n - lag; i++) s += buf[i] * buf[i + lag];
+    for (let i = 0; i < n - lag; i++) s += buf[i]! * buf[i + lag]!;
     c[lag] = s;
   }
   let d = 0;
