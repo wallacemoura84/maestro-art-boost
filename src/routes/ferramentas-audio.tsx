@@ -704,7 +704,7 @@ function Metronome() {
   const timerRef = useRef<number>(0);
   const visualRef = useRef<number[]>([]);
   const tapsRef = useRef<number[]>([]);
-  const nextRef = useRef({ time: 0, beat: 0 });
+  const nextRef = useRef({ time: 0, beat: 0, step: 0 });
   const live = useRef({ sound, volume, bpm });
   live.current = { sound, volume, bpm };
 
@@ -761,7 +761,7 @@ function Metronome() {
           }
         } else if (polyMode === "ratio") {
           const ratio = POLY_RATIOS[polyRatio] ?? DEFAULT_RATIO;
-          const position = b % ratio.bottom;
+          const position = nextRef.current.step % ratio.bottom;
           for (let i = 0; i < ratio.top; i++) {
             const offset = (i * ratio.bottom) / ratio.top - position;
             if (offset >= -0.0001 && offset < 1 - 0.0001) {
@@ -777,6 +777,7 @@ function Metronome() {
         }, delay);
         visualRef.current.push(visual);
         nextRef.current.beat = (b + 1) % meter.beats;
+        nextRef.current.step += 1;
         nextRef.current.time += interval;
       }
     }, 25);
@@ -793,6 +794,7 @@ function Metronome() {
     clearInterval(timerRef.current);
     clearVisuals();
     nextRef.current.beat = 0;
+    nextRef.current.step = 0;
     setBeat(0);
     setPulse(false);
     setStatus("stopped");
@@ -840,6 +842,7 @@ function Metronome() {
                 setMeterId(m.id);
                 setGroupIndex(0);
                 nextRef.current.beat = 0;
+                nextRef.current.step = 0;
                 setBeat(0);
               }}
             >
