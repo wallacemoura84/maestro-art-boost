@@ -143,3 +143,23 @@
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
 }
+
+/* Ferramentas de Áudio — paleta escura específica da aba */
+.audio-tools {
+  --at-bg: #0d0707;
+  --at-panel: #1a1a1a;
+  --at-border: #333333;
+  --at-text: #f0f0f0;
+  --at-label: #b8b8b8;
+  --at-muted: #808080;
+  --at-accent: #ff8a1f;
+  --at-accent-fg: #0d0707;
+  --at-ok: #22dd22;
+  --at-bad: #ff4444;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--at-bg);
+  color: var(--at-text);
+}
+.audio-tools input[type="range"] { accent-color: var(--at-accent); }
+.audio-tools textarea::placeholder { color: #9a9a9a; }
+.audio-tools button:disabled, .audio-tools input:disabled, .audio-tools select:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
