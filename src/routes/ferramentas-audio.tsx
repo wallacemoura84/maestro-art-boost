@@ -606,14 +606,34 @@ function ReadingCalculator() {
 /* ---------- 3. Metrônomo ---------- */
 
 const METERS = [
-  { id: "1/4", beats: 1, desc: "um tempo" },
-  { id: "2/4", beats: 2, desc: "dois tempos" },
-  { id: "3/4", beats: 3, desc: "três tempos" },
-  { id: "4/4", beats: 4, desc: "quatro tempos" },
-  { id: "6/8", beats: 6, desc: "seis tempos" },
-  { id: "9/8", beats: 9, desc: "nove tempos" },
-  { id: "12/8", beats: 12, desc: "doze tempos" },
+  { id: "1/4", beats: 1, unit: 4, groups: [[1]] },
+  { id: "2/4", beats: 2, unit: 4, groups: [[2]] },
+  { id: "3/4", beats: 3, unit: 4, groups: [[3]] },
+  { id: "4/4", beats: 4, unit: 4, groups: [[4]] },
+  { id: "5/4", beats: 5, unit: 4, groups: [[3, 2], [2, 3]] },
+  { id: "7/4", beats: 7, unit: 4, groups: [[3, 2, 2], [2, 3, 2], [2, 2, 3]] },
+  { id: "5/8", beats: 5, unit: 8, groups: [[3, 2], [2, 3]] },
+  { id: "6/8", beats: 6, unit: 8, groups: [[3, 3]] },
+  { id: "7/8", beats: 7, unit: 8, groups: [[3, 2, 2], [2, 3, 2], [2, 2, 3]] },
+  { id: "9/8", beats: 9, unit: 8, groups: [[3, 3, 3]] },
+  { id: "12/8", beats: 12, unit: 8, groups: [[3, 3, 3, 3]] },
 ];
+const NOTE_VALUES = [
+  { id: "quarter", label: "♩ Semínima", quarters: 1 },
+  { id: "eighth", label: "♪ Colcheia", quarters: 0.5 },
+  { id: "dotted", label: "♩. Semínima pontuada", quarters: 1.5 },
+  { id: "half", label: "𝅗𝅥 Mínima", quarters: 2 },
+];
+const EQUIVALENCES = [
+  { label: "♩ = ♩", from: 1, to: 1 },
+  { label: "♩ = ♪", from: 1, to: 0.5 },
+  { label: "♪ = ♩", from: 0.5, to: 1 },
+  { label: "♩ = ♩.", from: 1, to: 1.5 },
+  { label: "♩. = ♩", from: 1.5, to: 1 },
+  { label: "♩ = 𝅗𝅥", from: 1, to: 2 },
+  { label: "𝅗𝅥 = ♩", from: 2, to: 1 },
+];
+const POLY_RATIOS = [{ top: 3, bottom: 2 }, { top: 2, bottom: 3 }, { top: 4, bottom: 3 }, { top: 3, bottom: 4 }, { top: 5, bottom: 4 }, { top: 4, bottom: 5 }, { top: 5, bottom: 3 }, { top: 7, bottom: 4 }];
 const SOUNDS = [
   { id: "click", name: "Clique (padrão)" },
   { id: "bell", name: "Sino" },
@@ -661,7 +681,17 @@ function playTick(ctx: AudioContext, time: number, sound: string, volume: number
 
 function Metronome() {
   const [bpm, setBpm] = useState(60);
-  const [meter, setMeter] = useState(METERS.find((m) => m.id === "3/4")!);
+  const [meterId, setMeterId] = useState("3/4");
+  const meter = METERS.find((m) => m.id === meterId) ?? METERS[2];
+  const [groupIndex, setGroupIndex] = useState(0);
+  const groups = meter.groups[groupIndex] ?? meter.groups[0];
+  const [subdivision, setSubdivision] = useState(1);
+  const [pulseNote, setPulseNote] = useState("quarter");
+  const [equivalence, setEquivalence] = useState(0);
+  const [polyMode, setPolyMode] = useState<"off" | "bar" | "ratio">("off");
+  const [polyBeats, setPolyBeats] = useState(3);
+  const [polyRatio, setPolyRatio] = useState(0);
+  const [tapCount, setTapCount] = useState(0);
   const [volume, setVolume] = useState(70);
   const [sound, setSound] = useState("click");
   const [status, setStatus] = useState<"stopped" | "playing" | "paused">("stopped");
@@ -670,32 +700,80 @@ function Metronome() {
 
   const ctxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<number>(0);
+  const visualRef = useRef<number[]>([]);
+  const tapsRef = useRef<number[]>([]);
   const nextRef = useRef({ time: 0, beat: 0 });
-  const live = useRef({ sound, volume });
-  live.current = { sound, volume };
+  const live = useRef({ sound, volume, bpm });
+  live.current = { sound, volume, bpm };
+
+  const clearVisuals = () => {
+    visualRef.current.forEach(clearTimeout);
+    visualRef.current = [];
+  };
 
   useEffect(() => () => {
     clearInterval(timerRef.current);
+    clearVisuals();
     ctxRef.current?.close();
   }, []);
 
+  const tap = () => {
+    const now = performance.now();
+    const recent = tapsRef.current.filter((t) => now - t < 2500);
+    const last = recent[recent.length - 1];
+    if (last && now - last >= 2000) recent.length = 0;
+    recent.push(now);
+    tapsRef.current = recent.slice(-7);
+    setTapCount(tapsRef.current.length);
+    if (tapsRef.current.length < 2) return;
+    const gaps = tapsRef.current.slice(1).map((t, i) => t - tapsRef.current[i]);
+    const sorted = [...gaps].sort((a, b) => a - b);
+    const interval = sorted[Math.floor(sorted.length / 2)];
+    if (interval >= 200 && interval <= 1500) setBpm(Math.max(40, Math.min(300, Math.round(60000 / interval))));
+  };
+
   const start = () => {
+    clearInterval(timerRef.current);
+    clearVisuals();
     const ctx = ctxRef.current ?? new AudioContext();
     ctxRef.current = ctx;
     ctx.resume();
     nextRef.current.time = ctx.currentTime + 0.05;
-    const interval = 60 / bpm;
+    const pulseQuarters = NOTE_VALUES.find((n) => n.id === pulseNote)?.quarters ?? 1;
     timerRef.current = window.setInterval(() => {
       while (nextRef.current.time < ctx.currentTime + 0.1) {
         const b = nextRef.current.beat;
         const t = nextRef.current.time;
-        playTick(ctx, t, live.current.sound, live.current.volume / 100, b === 0);
+        const interval = (60 / live.current.bpm) * (4 / meter.unit) / pulseQuarters;
+        const groupStart = b === 0 || groups.slice(0, -1).some((_, i) => groups.slice(0, i + 1).reduce((sum, v) => sum + v, 0) === b);
+        playTick(ctx, t, live.current.sound, live.current.volume / 100, groupStart);
+        for (let i = 1; i < subdivision; i++) {
+          playTick(ctx, t + (interval * i) / subdivision, "wood", (live.current.volume / 100) * 0.34, false);
+        }
+        if (polyMode === "bar") {
+          for (let i = 0; i < polyBeats; i++) {
+            const offset = (i * meter.beats) / polyBeats - b;
+            if (offset > 0.0001 && offset < 1 - 0.0001) {
+              playTick(ctx, t + offset * interval, "bell", (live.current.volume / 100) * 0.27, false);
+            }
+          }
+        } else if (polyMode === "ratio") {
+          const ratio = POLY_RATIOS[polyRatio];
+          const position = b % ratio.bottom;
+          for (let i = 0; i < ratio.top; i++) {
+            const offset = (i * ratio.bottom) / ratio.top - position;
+            if (offset > 0.0001 && offset < 1 - 0.0001) {
+              playTick(ctx, t + offset * interval, "bell", (live.current.volume / 100) * 0.27, false);
+            }
+          }
+        }
         const delay = Math.max(0, (t - ctx.currentTime) * 1000);
-        setTimeout(() => {
+        const visual = window.setTimeout(() => {
           setBeat(b + 1);
           setPulse(true);
-          setTimeout(() => setPulse(false), 100);
+          visualRef.current.push(window.setTimeout(() => setPulse(false), 100));
         }, delay);
+        visualRef.current.push(visual);
         nextRef.current.beat = (b + 1) % meter.beats;
         nextRef.current.time += interval;
       }
@@ -705,12 +783,16 @@ function Metronome() {
 
   const pause = () => {
     clearInterval(timerRef.current);
+    clearVisuals();
+    setPulse(false);
     setStatus("paused");
   };
   const stop = () => {
     clearInterval(timerRef.current);
+    clearVisuals();
     nextRef.current.beat = 0;
     setBeat(0);
+    setPulse(false);
     setStatus("stopped");
   };
   const playing = status === "playing";
@@ -721,16 +803,40 @@ function Metronome() {
         <Mono className="text-6xl font-bold sm:text-7xl">{bpm}</Mono>
         <span className="ml-2 text-[var(--at-label)]">bpm</span>
       </div>
-      <Slider label="Andamento" value={bpm} min={40} max={300} display={`${bpm} bpm`} onChange={setBpm} disabled={playing} />
+      <div className="grid items-end gap-4 sm:grid-cols-[1fr_auto]">
+        <Slider label="Andamento" value={bpm} min={40} max={300} display={`${bpm} bpm`} onChange={setBpm} />
+        <Btn big onClick={tap} aria-label="Marcar andamento tocando no ritmo" title="Toque no ritmo da música para definir o BPM" className="min-w-36">Tap tempo{tapCount > 0 && tapCount < 2 ? " · 1" : ""}</Btn>
+      </div>
+      <Panel title="Pulso e equivalência">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1"><Label>Figura do BPM</Label>
+            <select value={pulseNote} disabled={playing} onChange={(e) => setPulseNote(e.target.value)} className="rounded-md border border-[var(--at-border)] bg-[var(--at-bg)] p-2 text-sm">
+              {NOTE_VALUES.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
+            </select>
+          </label>
+          <div className="flex items-end gap-2">
+            <label className="flex min-w-0 flex-1 flex-col gap-1"><Label>Equivalência de andamento</Label>
+              <select value={equivalence} onChange={(e) => setEquivalence(Number(e.target.value))} className="w-full rounded-md border border-[var(--at-border)] bg-[var(--at-bg)] p-2 text-sm">
+                {EQUIVALENCES.map((item, i) => <option key={i} value={i}>{item.label}</option>)}
+              </select>
+            </label>
+            <Btn onClick={() => {
+              const item = EQUIVALENCES[equivalence];
+              setBpm((current) => Math.max(40, Math.min(300, Math.round(current * item.to / item.from))));
+            }}>Aplicar</Btn>
+          </div>
+        </div>
+      </Panel>
       <Panel title="Compasso">
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-2">
           {METERS.map((m) => (
             <Btn
               key={m.id}
-              active={meter.id === m.id}
+              active={meterId === m.id}
               disabled={playing}
               onClick={() => {
-                setMeter(m);
+                setMeterId(m.id);
+                setGroupIndex(0);
                 nextRef.current.beat = 0;
                 setBeat(0);
               }}
@@ -739,7 +845,19 @@ function Metronome() {
             </Btn>
           ))}
         </div>
-        <p className="mt-2 text-sm text-[var(--at-label)]">{meter.desc}</p>
+        {meter.groups.length > 1 && <div className="mt-4"><Label>Acentuação</Label><div className="mt-2 flex flex-wrap gap-2">{meter.groups.map((group, i) => <Btn key={i} active={groupIndex === i} disabled={playing} onClick={() => setGroupIndex(i)}>{group.join(" + ")}</Btn>)}</div></div>}
+      </Panel>
+      <Panel title="Subdivisão e polirritmia">
+        <div className="space-y-4">
+          <div><Label>Subdivisões por tempo</Label><div className="mt-2 flex flex-wrap gap-2">{[1, 2, 3, 4, 6].map((n) => <Btn key={n} active={subdivision === n} disabled={playing} onClick={() => setSubdivision(n)}>{n === 1 ? "Sem subdivisão" : `${n} por tempo`}</Btn>)}</div></div>
+          <div><Label>Segunda camada rítmica</Label><div className="mt-2 flex flex-wrap gap-2">
+            <Btn active={polyMode === "off"} disabled={playing} onClick={() => setPolyMode("off")}>Desligada</Btn>
+            <Btn active={polyMode === "bar"} disabled={playing} onClick={() => setPolyMode("bar")}>Por compasso</Btn>
+            <Btn active={polyMode === "ratio"} disabled={playing} onClick={() => setPolyMode("ratio")}>Por grupo</Btn>
+          </div></div>
+          {polyMode === "bar" && <label className="flex flex-col gap-1"><Label>Pulsos da segunda camada no compasso ({polyBeats}:{meter.beats})</Label><select value={polyBeats} disabled={playing} onChange={(e) => setPolyBeats(Number(e.target.value))} className="rounded-md border border-[var(--at-border)] bg-[var(--at-bg)] p-2 text-sm">{[2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{n}:{meter.beats}</option>)}</select></label>}
+          {polyMode === "ratio" && <label className="flex flex-col gap-1"><Label>Pulsos por grupo</Label><select value={polyRatio} disabled={playing} onChange={(e) => setPolyRatio(Number(e.target.value))} className="rounded-md border border-[var(--at-border)] bg-[var(--at-bg)] p-2 text-sm">{POLY_RATIOS.map((ratio, i) => <option key={i} value={i}>{ratio.top}:{ratio.bottom}</option>)}</select></label>}
+        </div>
       </Panel>
       <Panel>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -771,15 +889,11 @@ function Metronome() {
           Tempo: <Mono>{beat}/{meter.beats}</Mono>
         </span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-1 sm:gap-2" aria-label="Indicador dos tempos do compasso">
         {Array.from({ length: meter.beats }, (_, i) => (
           <div
             key={i}
-            className="h-4 flex-1 rounded transition-colors duration-75"
-            style={{
-              background: beat === i + 1 && pulse ? "var(--at-accent)" : "var(--at-panel)",
-              border: "1px solid var(--at-border)",
-            }}
+            className={`h-4 min-w-0 flex-1 rounded-sm border transition-colors duration-75 ${beat === i + 1 && pulse ? "border-[var(--at-accent)] bg-[var(--at-accent)]" : groups.slice(0, -1).some((_, j) => groups.slice(0, j + 1).reduce((sum, v) => sum + v, 0) === i) || i === 0 ? "border-[var(--at-accent)] bg-[var(--at-panel)]" : "border-[var(--at-border)] bg-[var(--at-panel)]"}`}
           />
         ))}
       </div>
