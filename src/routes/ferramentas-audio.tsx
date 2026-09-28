@@ -753,7 +753,7 @@ function Metronome() {
         if (polyMode === "bar") {
           for (let i = 0; i < polyBeats; i++) {
             const offset = (i * meter.beats) / polyBeats - b;
-            if (offset > 0.0001 && offset < 1 - 0.0001) {
+            if (offset >= -0.0001 && offset < 1 - 0.0001) {
               playTick(ctx, t + offset * interval, "bell", (live.current.volume / 100) * 0.27, false);
             }
           }
@@ -762,7 +762,7 @@ function Metronome() {
           const position = b % ratio.bottom;
           for (let i = 0; i < ratio.top; i++) {
             const offset = (i * ratio.bottom) / ratio.top - position;
-            if (offset > 0.0001 && offset < 1 - 0.0001) {
+            if (offset >= -0.0001 && offset < 1 - 0.0001) {
               playTick(ctx, t + offset * interval, "bell", (live.current.volume / 100) * 0.27, false);
             }
           }
