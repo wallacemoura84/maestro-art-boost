@@ -949,7 +949,7 @@ function Tuner() {
   return (
     <Card icon="🎸" title="Afinador Cromático">
       <div className="flex flex-wrap gap-4">
-        <Btn active={mode === "la"} onClick={() => setMode("la")}>🎼 Diapasão (Lá)</Btn>
+        <Btn active={mode === "la"} onClick={() => { setMode("la"); stopDetect(); }}>🎼 Diapasão (Lá)</Btn>
         <Btn active={mode === "violao"} onClick={() => { setMode("violao"); stopTone(); }}>🎸 Afinador de violão</Btn>
       </div>
       <Panel title="Afinação de referência (Lá)">
@@ -1046,6 +1046,8 @@ function Tuner() {
           <p className="text-xs text-[var(--at-label)]">1 = menor ruído capturado, 10 = maior sensibilidade</p>
         </div>
       </div>
+      </>
+      )}
     </Card>
   );
 }
