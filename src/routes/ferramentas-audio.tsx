@@ -606,10 +606,13 @@ function ReadingCalculator() {
 /* ---------- 3. Metrônomo ---------- */
 
 const METERS = [
+  { id: "1/4", beats: 1, desc: "um tempo" },
   { id: "2/4", beats: 2, desc: "dois tempos" },
   { id: "3/4", beats: 3, desc: "três tempos" },
   { id: "4/4", beats: 4, desc: "quatro tempos" },
   { id: "6/8", beats: 6, desc: "seis tempos" },
+  { id: "9/8", beats: 9, desc: "nove tempos" },
+  { id: "12/8", beats: 12, desc: "doze tempos" },
 ];
 const SOUNDS = [
   { id: "click", name: "Clique (padrão)" },
@@ -657,8 +660,8 @@ function playTick(ctx: AudioContext, time: number, sound: string, volume: number
 }
 
 function Metronome() {
-  const [bpm, setBpm] = useState(120);
-  const [meter, setMeter] = useState(METERS[1]!);
+  const [bpm, setBpm] = useState(60);
+  const [meter, setMeter] = useState(METERS.find((m) => m.id === "3/4")!);
   const [volume, setVolume] = useState(70);
   const [sound, setSound] = useState("click");
   const [status, setStatus] = useState<"stopped" | "playing" | "paused">("stopped");
@@ -786,6 +789,15 @@ function Metronome() {
 
 /* ---------- 4. Afinador ---------- */
 
+const GUITAR_STRINGS = [
+  { label: "6ª", note: "E2", midi: 40 },
+  { label: "5ª", note: "A2", midi: 45 },
+  { label: "4ª", note: "D3", midi: 50 },
+  { label: "3ª", note: "G3", midi: 55 },
+  { label: "2ª", note: "B3", midi: 59 },
+  { label: "1ª", note: "E4", midi: 64 },
+];
+
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 function detectPitch(buf: Float32Array, sr: number, rmsThr: number) {
@@ -832,6 +844,34 @@ function Tuner() {
   const timerRef = useRef(0);
   const sensRef = useRef(sens);
   sensRef.current = sens;
+  const [refA, setRefA] = useState(440);
+  const refARef = useRef(refA);
+  refARef.current = refA;
+  const [mode, setMode] = useState<"la" | "violao">("violao");
+  const [toneOn, setToneOn] = useState(false);
+  const toneRef = useRef<{ ctx: AudioContext; osc: OscillatorNode } | null>(null);
+  const stopTone = () => {
+    toneRef.current?.osc.stop();
+    toneRef.current?.ctx.close();
+    toneRef.current = null;
+    setToneOn(false);
+  };
+  const startTone = (freq: number) => {
+    stopTone();
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    g.gain.value = 0.25;
+    osc.frequency.value = freq;
+    osc.connect(g).connect(ctx.destination);
+    osc.start();
+    toneRef.current = { ctx, osc };
+    setToneOn(true);
+  };
+  useEffect(() => {
+    if (toneRef.current) toneRef.current.osc.frequency.value = refA;
+  }, [refA]);
+  useEffect(() => stopTone, []);
   const lastNote = useRef("");
 
   useEffect(() => {
@@ -880,8 +920,8 @@ function Tuner() {
         const thr = 0.004 + (10 - sensRef.current) * 0.004;
         const f = detectPitch(buf, ctx.sampleRate, thr);
         if (f < 0) return;
-        const midi = Math.round(69 + 12 * Math.log2(f / 440));
-        const ref = 440 * Math.pow(2, (midi - 69) / 12);
+        const midi = Math.round(69 + 12 * Math.log2(f / refARef.current));
+        const ref = refARef.current * Math.pow(2, (midi - 69) / 12);
         const cents = 1200 * Math.log2(f / ref);
         const note = `${NOTE_NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
         setReading({ note, freq: f, cents });
@@ -908,6 +948,29 @@ function Tuner() {
 
   return (
     <Card icon="🎸" title="Afinador Cromático">
+      <div className="flex flex-wrap gap-4">
+        <Btn active={mode === "la"} onClick={() => { setMode("la"); stopDetect(); }}>🎼 Diapasão (Lá)</Btn>
+        <Btn active={mode === "violao"} onClick={() => { setMode("violao"); stopTone(); }}>🎸 Afinador de violão</Btn>
+      </div>
+      <Panel title="Afinação de referência (Lá)">
+        <div className="flex flex-wrap gap-4">
+          {[415, 432, 440, 442].map((hz) => (
+            <Btn key={hz} active={refA === hz} onClick={() => setRefA(hz)}>
+              Lá = <Mono>{hz}</Mono> Hz
+            </Btn>
+          ))}
+        </div>
+      </Panel>
+      {mode === "la" ? (
+        <div className="rounded-lg border border-[var(--at-border)] bg-[var(--at-panel)] p-6 text-center">
+          <Mono className="block text-7xl font-bold">A4</Mono>
+          <Mono className="mt-2 block text-xl">{refA.toFixed(2)} Hz</Mono>
+          <Btn big active className="mt-4" onClick={() => (toneOn ? stopTone() : startTone(refA))}>
+            {toneOn ? "⏹ Parar Lá" : "▶ Tocar Lá"}
+          </Btn>
+        </div>
+      ) : (
+      <>
       <Panel>
         <label className="flex flex-col gap-1">
           <Label>Entrada de áudio</Label>
@@ -955,6 +1018,19 @@ function Tuner() {
         </p>
       </div>
 
+      <div className="grid grid-cols-6 gap-2">
+        {GUITAR_STRINGS.map((st) => {
+          const hz = refA * Math.pow(2, (st.midi - 69) / 12);
+          const on = reading?.note === st.note;
+          return (
+            <div key={st.note} className="rounded-md border p-2 text-center" style={{ borderColor: on ? "var(--at-accent)" : "var(--at-border)", background: on ? "var(--at-accent)" : "var(--at-panel)", color: on ? "var(--at-accent-fg)" : undefined }}>
+              <div className="text-xs">{st.label}</div>
+              <Mono className="block text-lg font-bold">{st.note}</Mono>
+              <Mono className="block text-[10px]">{hz.toFixed(2)} Hz</Mono>
+            </div>
+          );
+        })}
+      </div>
       <Panel title="Histórico de Afinação">
         <Mono className="text-sm">
           {history.length ? history.map((h) => `${h.note} @ ${h.freq.toFixed(2)} Hz`).join(" | ") : "—"}
@@ -970,6 +1046,8 @@ function Tuner() {
           <p className="text-xs text-[var(--at-label)]">1 = menor ruído capturado, 10 = maior sensibilidade</p>
         </div>
       </div>
+      </>
+      )}
     </Card>
   );
 }
