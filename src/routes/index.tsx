@@ -128,7 +128,7 @@ function Index() {
 
       <header className="fixed inset-x-0 top-0 z-50">
         <div className="mx-auto max-w-6xl px-5 pt-4">
-          <nav className="glass rounded-2xl px-5 py-3 shadow-sm" aria-label="Navegação principal">
+          <nav className={`${menuOpen ? "border border-border bg-background" : "glass"} rounded-2xl px-5 py-3 shadow-sm`} aria-label="Navegação principal">
             <div className="flex items-center justify-between gap-3">
               <Link to="/" className="font-serif text-lg tracking-wide text-ink">
                 Wallace Moura<span className="text-gold">.</span>
