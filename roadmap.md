@@ -1,0 +1,4 @@
+- [x] Add tap tempo and live BPM changes to the metronome.
+- [x] Add subdivisions, asymmetric meters/grouping, rhythmic overlays, and pulse equivalences.
+- [x] Verify metronome controls and playback in desktop/mobile preview.
+- [x] Separate audio tools (recording and reading) from musical tools (metronome and tuner) into distinct tabs/pages.
