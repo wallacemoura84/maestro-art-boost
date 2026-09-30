@@ -34,15 +34,6 @@ export const Route = createFileRoute("/composicoes")({
 function AdSlot() {
   useEffect(() => {
     if (!ADSENSE_CLIENT) return;
-    const id = "adsense-script";
-    if (!document.getElementById(id)) {
-      const s = document.createElement("script");
-      s.id = id;
-      s.async = true;
-      s.crossOrigin = "anonymous";
-      s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
-      document.head.appendChild(s);
-    }
     try {
       const w = window as unknown as { adsbygoogle?: unknown[] };
       (w.adsbygoogle = w.adsbygoogle || []).push({});
@@ -52,6 +43,15 @@ function AdSlot() {
   }, []);
 
   if (!ADSENSE_CLIENT) {
+    return (
+      <div className="flex min-h-[180px] items-center justify-center rounded-2xl border border-dashed border-border text-xs text-soft">
+        Espaço publicitário
+      </div>
+    );
+  }
+  if (!ADSENSE_SLOT) {
+    // Com o script do AdSense no head, os anúncios automáticos do Google
+    // preenchem a página; este espaço fica reservado até criar um bloco de anúncios.
     return (
       <div className="flex min-h-[180px] items-center justify-center rounded-2xl border border-dashed border-border text-xs text-soft">
         Espaço publicitário
