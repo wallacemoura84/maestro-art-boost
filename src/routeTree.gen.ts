@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ComposicoesRouteImport } from './routes/composicoes'
 import { Route as FerramentasAudioRouteImport } from './routes/ferramentas-audio'
 import { Route as FerramentasMusicaisRouteImport } from './routes/ferramentas-musicais'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -18,6 +19,11 @@ import { Route as TeoriaMusicalRouteImport } from './routes/teoria-musical'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComposicoesRoute = ComposicoesRouteImport.update({
+  id: '/composicoes',
+  path: '/composicoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FerramentasAudioRoute = FerramentasAudioRouteImport.update({
@@ -43,6 +49,7 @@ const TeoriaMusicalRoute = TeoriaMusicalRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/composicoes': typeof ComposicoesRoute
   '/ferramentas-audio': typeof FerramentasAudioRoute
   '/ferramentas-musicais': typeof FerramentasMusicaisRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/composicoes': typeof ComposicoesRoute
   '/ferramentas-audio': typeof FerramentasAudioRoute
   '/ferramentas-musicais': typeof FerramentasMusicaisRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/composicoes': typeof ComposicoesRoute
   '/ferramentas-audio': typeof FerramentasAudioRoute
   '/ferramentas-musicais': typeof FerramentasMusicaisRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -67,6 +76,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/composicoes'
     | '/ferramentas-audio'
     | '/ferramentas-musicais'
     | '/sitemap.xml'
@@ -74,6 +84,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/composicoes'
     | '/ferramentas-audio'
     | '/ferramentas-musicais'
     | '/sitemap.xml'
@@ -81,6 +92,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/composicoes'
     | '/ferramentas-audio'
     | '/ferramentas-musicais'
     | '/sitemap.xml'
@@ -89,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ComposicoesRoute: typeof ComposicoesRoute
   FerramentasAudioRoute: typeof FerramentasAudioRoute
   FerramentasMusicaisRoute: typeof FerramentasMusicaisRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -102,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/composicoes': {
+      id: '/composicoes'
+      path: '/composicoes'
+      fullPath: '/composicoes'
+      preLoaderRoute: typeof ComposicoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ferramentas-audio': {
@@ -137,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ComposicoesRoute: ComposicoesRoute,
   FerramentasAudioRoute: FerramentasAudioRoute,
   FerramentasMusicaisRoute: FerramentasMusicaisRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

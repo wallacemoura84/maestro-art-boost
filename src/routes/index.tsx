@@ -140,6 +140,7 @@ function Index() {
                 <Link to="/teoria-musical" className="hover:text-ink">Curso de música</Link>
                 <Link to="/ferramentas-audio" className="hover:text-ink">Ferramentas de Áudio</Link>
                 <Link to="/ferramentas-musicais" className="hover:text-ink">Ferramentas Musicais</Link>
+                <Link to="/composicoes" className="hover:text-ink">Composições</Link>
               </div>
               <a
                 href={CONTATO.agendamento}
@@ -170,6 +171,7 @@ function Index() {
                 <Link to="/teoria-musical" onClick={() => setMenuOpen(false)} className="py-2">Curso de música</Link>
                 <Link to="/ferramentas-audio" onClick={() => setMenuOpen(false)} className="py-2">Ferramentas de Áudio</Link>
                 <Link to="/ferramentas-musicais" onClick={() => setMenuOpen(false)} className="py-2">Ferramentas Musicais</Link>
+                <Link to="/composicoes" onClick={() => setMenuOpen(false)} className="py-2">Composições</Link>
                 <a href={CONTATO.agendamento} target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)} className="py-2 font-semibold">Agende uma aula ↗</a>
               </div>
             )}
