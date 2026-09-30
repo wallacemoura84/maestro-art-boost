@@ -17,12 +17,8 @@ const PARTITURAS: { titulo: string; url: string }[] = [
     url: "https://drive.google.com/file/d/1lNGn8oKH-a-6NoQKt-MgPH9SRhY4KdXB/view?usp=drivesdk",
   },
   {
-    titulo: "Salmo 24 — Recordai, Senhor, meu Deus (PDF)",
+    titulo: "Salmo 24 — Recordai, Senhor, meu Deus",
     url: "https://drive.google.com/file/d/1A6wV4WAwm5CPzIdLDfKJJqKDVq1tHq7K/view?usp=drivesdk",
-  },
-  {
-    titulo: "Salmo 24 — Recordai, Senhor, meu Deus (PNG)",
-    url: "https://drive.google.com/file/d/1X_5SpyQwN9h1xD2krSl4uGZ5yBnEmPJL/view?usp=drivesdk",
   },
   {
     titulo: "Salmo 32",
