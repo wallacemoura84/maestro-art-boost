@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 
 const DRIVE_URL =
   "https://drive.google.com/drive/folders/1NkD7fm0SRPCgLZfYa27oUm2fVocImdYH?usp=sharing";
-// Preencha com o ID de editor do AdSense (ex.: "ca-pub-1234567890123456") após a aprovação.
-const ADSENSE_CLIENT = "";
+// ID de editor do AdSense ativo. O script do AdSense é carregado no __root.tsx.
+const ADSENSE_CLIENT = "ca-pub-1156847495220680";
+// Opcional: preencha com o ID do bloco de anúncios criado no AdSense (ex.: "1234567890").
 const ADSENSE_SLOT = "";
 const WAIT_SECONDS = 30;
 
