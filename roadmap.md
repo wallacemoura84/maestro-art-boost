@@ -2,3 +2,4 @@
 - [x] Add subdivisions, asymmetric meters/grouping, rhythmic overlays, and pulse equivalences.
 - [x] Verify metronome controls and playback in desktop/mobile preview.
 - [x] Separate audio tools (recording and reading) from musical tools (metronome and tuner) into distinct tabs/pages.
+- [x] Remove AdSense placements and timed download gates from compositions while preserving ownership verification for policy review.
