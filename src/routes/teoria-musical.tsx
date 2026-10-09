@@ -25,7 +25,7 @@ export const Route = createFileRoute("/teoria-musical")({
   component: TeoriaMusical,
 });
 
-const AGENDAMENTO = "https://reservahorario.com.br/maestro-wallace-aulas-de-musica";
+const AGENDAMENTO = "https://cal.com/maestrowallacemoura/aula";
 
 const disciplinas = [
   {
@@ -181,7 +181,7 @@ function TeoriaMusical() {
                   Agende uma aula
                 </a>
                 <p className="text-center text-xs text-soft">
-                  reservahorario.com.br/maestro-wallace-aulas-de-musica
+                  cal.com/maestrowallacemoura/aula
                 </p>
               </div>
             </div>
