@@ -51,7 +51,7 @@ const CONTATO = {
   congressoEucaristico: "https://www.youtube.com/watch?v=w4_RFnnYUBI",
   congressos: "https://www.youtube.com/watch?v=YAMog1c75yQ&list=PLeS-LqFLdJIk",
   lattes: "http://lattes.cnpq.br/9393480660650652",
-  agendamento: "https://reservahorario.com.br/maestro-wallace-aulas-de-musica",
+  agendamento: "https://cal.com/maestrowallacemoura/aula",
 };
 
 const formacao = [
@@ -498,7 +498,7 @@ function Index() {
                   Agende uma aula
                 </a>
                 <p className="text-center text-xs text-soft">
-                  reservahorario.com.br/maestro-wallace-aulas-de-musica
+                  cal.com/maestrowallacemoura/aula
                 </p>
               </div>
             </div>
