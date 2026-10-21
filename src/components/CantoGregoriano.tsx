@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BibliotecaKyriale } from "@/components/BibliotecaKyriale";
+import { GuiaGabc } from "@/components/GuiaGabc";
 import {
   carregarScript,
   extrairEventos,
@@ -13,10 +15,19 @@ import {
   type Timbre,
 } from "@/lib/canto-midi";
 import { EXEMPLOS_GABC } from "@/lib/exemplos-gabc";
+import {
+  configurarContexto,
+  corpoGabc,
+  lerCabecalho,
+  modoRomano,
+  nomeDaParte,
+  prepararParaExsurge,
+  romano,
+} from "@/lib/gabc";
+import { MISSAS, partesDaMissa, pecaDaMissa, todasAsPecas, type PecaKyriale } from "@/lib/kyriale";
 
-const COR_TINTA = "#1a2233";
-const COR_RUBRICA = "#a33a2c";
 const SVG_NS = "http://www.w3.org/2000/svg";
+const PARTITURA = "partitura"; // id do que está tocando quando é a partitura principal
 
 interface Retangulo {
   x: number;
@@ -25,10 +36,12 @@ interface Retangulo {
   h: number;
 }
 
-// Aceita GABC com cabeçalho (name: ...; %%) ou só o corpo.
-function corpoGabc(texto: string) {
-  const i = texto.indexOf("%%");
-  return i >= 0 ? texto.slice(i + 2) : texto;
+// De onde veio a partitura (exemplo ou Kyriale). Some quando o código é editado.
+interface Origem {
+  id: string;
+  titulo: string;
+  subtitulo: string;
+  anotacao?: string;
 }
 
 function nomeArquivo(titulo: string, ext: string) {
@@ -53,25 +66,29 @@ function baixar(blob: Blob, nome: string) {
 }
 
 const primeiroExemplo = EXEMPLOS_GABC[0]!;
+const PECAS_KYRIALE = todasAsPecas();
 
 export function CantoGregoriano() {
   const [gabc, setGabc] = useState(primeiroExemplo.gabc);
-  const [exemploId, setExemploId] = useState(primeiroExemplo.id);
-  const [titulo, setTitulo] = useState(primeiroExemplo.titulo);
-  const [subtitulo, setSubtitulo] = useState(primeiroExemplo.subtitulo);
-  const [anotacao, setAnotacao] = useState(primeiroExemplo.anotacao);
+  const [origem, setOrigem] = useState<Origem | null>({
+    id: primeiroExemplo.id,
+    titulo: primeiroExemplo.titulo,
+    subtitulo: primeiroExemplo.subtitulo,
+    anotacao: primeiroExemplo.anotacao,
+  });
+  const [carregandoPeca, setCarregandoPeca] = useState<string | null>(null);
   const [timbre, setTimbre] = useState<Timbre>("orgao");
   // 0,6 s por nota: o Christus factus est fica em ~2min35s, perto das gravações de Solesmes
   const [bpm, setBpm] = useState(100);
   const [transposicao, setTransposicao] = useState(0);
-  const [tocando, setTocando] = useState(false);
+  const [tocandoId, setTocandoId] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [erro, setErro] = useState(false);
-  const [pronto, setPronto] = useState(false);
+  const [ex, setEx] = useState<ExsurgeLib | null>(null);
   const [temNotas, setTemNotas] = useState(false);
 
   const partituraRef = useRef<HTMLDivElement>(null);
-  const exRef = useRef<ExsurgeLib | null>(null);
+  const cartaoPartituraRef = useRef<HTMLElement>(null);
   const ctxtRef = useRef<ExsurgeContext | null>(null);
   const scoreRef = useRef<ExsurgeScore | null>(null);
   const eventosRef = useRef<EventoNota[]>([]);
@@ -82,6 +99,23 @@ export function CantoGregoriano() {
   transposicaoRef.current = transposicao;
 
   if (!tocadorRef.current && typeof window !== "undefined") tocadorRef.current = new Tocador();
+
+  // Título, subtítulo e anotação: da origem (exemplo/Kyriale) ou do cabeçalho do GABC.
+  const cabecalho = useMemo(() => lerCabecalho(gabc), [gabc]);
+  const titulo = origem?.titulo ?? cabecalho.nome ?? "Seu canto";
+  const subtitulo =
+    origem?.subtitulo ??
+    ([
+      cabecalho.parte && nomeDaParte(cabecalho.parte),
+      cabecalho.modo && `Modo ${modoRomano(cabecalho.modo)}`,
+    ]
+      .filter(Boolean)
+      .join(" · ") ||
+      "Partitura do seu código GABC");
+  const anotacao =
+    origem?.anotacao ?? cabecalho.anotacao ?? (cabecalho.modo ? modoRomano(cabecalho.modo) : "");
+
+  const tocando = tocandoId === PARTITURA;
 
   /* ---------- destaque da nota que está tocando ---------- */
 
@@ -107,11 +141,10 @@ export function CantoGregoriano() {
   /* ---------- partitura ---------- */
 
   const recalcularEventos = useCallback(() => {
-    const ex = exRef.current;
     const score = scoreRef.current;
     eventosRef.current = ex && score ? extrairEventos(ex, score, transposicaoRef.current) : [];
     setTemNotas(eventosRef.current.length > 0);
-  }, []);
+  }, [ex]);
 
   // Calcula onde cada nota está no SVG e cria uma camada de destaque
   // (atrás das notas) e uma camada clicável (na frente).
@@ -190,15 +223,14 @@ export function CantoGregoriano() {
 
   const montarPartitura = useCallback(
     (fonte: string, anot: string) => {
-      const ex = exRef.current;
       const ctxt = ctxtRef.current;
       if (!ex || !ctxt) return;
       tocadorRef.current?.parar(true);
-      setTocando(false);
+      setTocandoId(null);
       setErro(false);
       try {
-        const mapeamentos = ex.Gabc.createMappingsFromSource(ctxt, corpoGabc(fonte));
-        const score = new ex.ChantScore(ctxt, mapeamentos, true);
+        const corpo = prepararParaExsurge(corpoGabc(fonte));
+        const score = new ex.ChantScore(ctxt, ex.Gabc.createMappingsFromSource(ctxt, corpo), true);
         if (anot) score.annotation = new ex.Annotation(ctxt, anot);
         scoreRef.current = score;
       } catch {
@@ -211,7 +243,7 @@ export function CantoGregoriano() {
       }
       diagramar();
     },
-    [diagramar],
+    [ex, diagramar],
   );
 
   /* ---------- carregamento ---------- */
@@ -227,24 +259,12 @@ export function CantoGregoriano() {
 
     Promise.all([fontes, carregarScript(URL_EXSURGE)])
       .then(() => {
-        const ex = window.exsurge;
-        if (!ativo || !ex) return;
-        const ctxt = new ex.ChantContext();
-        ctxt.lyricTextFont = "'Cormorant Garamond', Georgia, serif";
-        ctxt.lyricTextSize = 22;
-        ctxt.lyricTextColor = COR_TINTA;
-        ctxt.dropCapTextFont = ctxt.lyricTextFont;
-        ctxt.dropCapTextSize = 72;
-        ctxt.dropCapTextColor = COR_RUBRICA;
-        ctxt.annotationTextFont = "'Manrope', system-ui, sans-serif";
-        ctxt.annotationTextSize = 12;
-        ctxt.annotationTextColor = COR_RUBRICA;
-        ctxt.neumeLineColor = COR_TINTA;
-        ctxt.staffLineColor = COR_RUBRICA;
-        ctxt.dividerLineColor = COR_TINTA;
-        exRef.current = ex;
+        const lib = window.exsurge;
+        if (!ativo || !lib) return;
+        const ctxt = new lib.ChantContext();
+        configurarContexto(ctxt);
         ctxtRef.current = ctxt;
-        setPronto(true);
+        setEx(lib);
       })
       .catch(() => {
         if (ativo)
@@ -260,24 +280,23 @@ export function CantoGregoriano() {
   useEffect(() => {
     const tocador = tocadorRef.current;
     if (!tocador) return;
-    tocador.aoMudarNota = destacar;
     tocador.aoTerminar = () => {
-      setTocando(false);
+      setTocandoId(null);
       limparDestaque();
     };
-  }, [destacar, limparDestaque]);
+  }, [limparDestaque]);
 
   // Redesenha quando o código muda (com uma pequena espera enquanto se digita).
   useEffect(() => {
-    if (!pronto) return;
+    if (!ex) return;
     const t = setTimeout(() => montarPartitura(gabc, anotacao), 300);
     return () => clearTimeout(t);
-  }, [pronto, gabc, anotacao, montarPartitura]);
+  }, [ex, gabc, anotacao, montarPartitura]);
 
   // Rediagrama quando a largura muda.
   useEffect(() => {
     const div = partituraRef.current;
-    if (!pronto || !div) return;
+    if (!ex || !div) return;
     let largura = div.clientWidth;
     let espera: ReturnType<typeof setTimeout> | undefined;
     const obs = new ResizeObserver(() => {
@@ -294,28 +313,31 @@ export function CantoGregoriano() {
       obs.disconnect();
       clearTimeout(espera);
     };
-  }, [pronto, diagramar]);
+  }, [ex, diagramar]);
 
   useEffect(() => {
     tocadorRef.current?.parar();
     recalcularEventos();
   }, [transposicao, recalcularEventos]);
 
-  /* ---------- ações ---------- */
+  /* ---------- reprodução ---------- */
 
-  const tocar = (aPartirDe: number) => {
+  // Toca a partitura principal (id PARTITURA, com destaque) ou um exemplo do guia.
+  const tocarEventos = (id: string, eventos: EventoNota[], aPartirDe = 0) => {
     const tocador = tocadorRef.current;
-    if (!tocador || !eventosRef.current.length) return;
+    if (!tocador || !eventos.length) return;
     const pedido = ++pedidoRef.current;
+    tocador.aoMudarNota = id === PARTITURA ? destacar : () => {};
+    limparDestaque();
     // o órgão baixa só as notas do canto; avisa se demorar
     const aviso = setTimeout(() => {
       if (pedido === pedidoRef.current) setStatus("Carregando o timbre…");
     }, 150);
-    setTocando(true);
-    void tocador.tocar(eventosRef.current, { bpm, timbre, aPartirDe }).then((iniciou) => {
+    setTocandoId(id);
+    void tocador.tocar(eventos, { bpm, timbre, aPartirDe }).then((iniciou) => {
       clearTimeout(aviso);
       if (pedido !== pedidoRef.current) return; // já houve outro clique
-      if (!iniciou) setTocando(false);
+      if (!iniciou) setTocandoId(null);
       setStatus(
         !iniciou || tocador.instrumento
           ? ""
@@ -324,34 +346,62 @@ export function CantoGregoriano() {
     });
   };
 
-  const alternar = () => {
-    if (tocando) {
-      pedidoRef.current++;
-      tocadorRef.current?.parar();
-      setTocando(false);
-      setStatus("");
-    } else tocar(0);
+  const parar = () => {
+    pedidoRef.current++;
+    tocadorRef.current?.parar();
+    setTocandoId(null);
+    setStatus("");
   };
 
-  const escolherExemplo = (id: string) => {
-    setExemploId(id);
-    const ex = EXEMPLOS_GABC.find((e) => e.id === id);
-    if (!ex) return;
-    setGabc(ex.gabc);
-    setTitulo(ex.titulo);
-    setSubtitulo(ex.subtitulo);
-    setAnotacao(ex.anotacao);
+  const alternar = () => {
+    if (tocando) parar();
+    else tocarEventos(PARTITURA, eventosRef.current);
+  };
+
+  /* ---------- escolha da partitura ---------- */
+
+  const escolherKyriale = (peca: PecaKyriale) => {
+    parar();
+    setCarregandoPeca(peca.id);
+    fetch(peca.arquivo)
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(r.statusText))))
+      .then((texto) => {
+        setGabc(texto);
+        setOrigem({ id: peca.id, titulo: peca.titulo, subtitulo: peca.subtitulo });
+        cartaoPartituraRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      })
+      .catch(() => setStatus("Não foi possível carregar essa partitura. Tente de novo."))
+      .finally(() => setCarregandoPeca(null));
+  };
+
+  const escolher = (id: string) => {
+    if (!id) {
+      // "Seu canto": mantém o código e passa a usar o cabeçalho dele
+      setOrigem(null);
+      return;
+    }
+    const exemplo = EXEMPLOS_GABC.find((e) => e.id === id);
+    if (exemplo) {
+      parar();
+      setGabc(exemplo.gabc);
+      setOrigem({
+        id: exemplo.id,
+        titulo: exemplo.titulo,
+        subtitulo: exemplo.subtitulo,
+        anotacao: exemplo.anotacao,
+      });
+      return;
+    }
+    const peca = PECAS_KYRIALE.find((p) => p.id === id);
+    if (peca) escolherKyriale(peca);
   };
 
   const editar = (texto: string) => {
     setGabc(texto);
-    if (exemploId) {
-      setExemploId("");
-      setTitulo("Seu canto");
-      setSubtitulo("Partitura gerada a partir do seu código GABC");
-      setAnotacao("");
-    }
+    setOrigem(null);
   };
+
+  /* ---------- downloads ---------- */
 
   const baixarMidi = () => {
     const dados = gerarMidi(eventosRef.current, {
@@ -374,7 +424,7 @@ export function CantoGregoriano() {
 
   const cliqueNaPartitura = (ev: React.MouseEvent<HTMLDivElement>) => {
     const alvo = (ev.target as Element).closest?.(".alvo-nota");
-    if (alvo) tocar(Number(alvo.getAttribute("data-indice")));
+    if (alvo) tocarEventos(PARTITURA, eventosRef.current, Number(alvo.getAttribute("data-indice")));
   };
 
   /* ---------- interface ---------- */
@@ -385,15 +435,17 @@ export function CantoGregoriano() {
     "h-11 w-full cursor-pointer appearance-none rounded-full border border-ink/10 bg-white/85 bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6b86' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")] bg-[right_14px_center] bg-no-repeat pl-4 pr-10 text-sm font-medium text-ink";
   const botaoSecundario =
     "h-11 flex-1 rounded-full border border-ink/10 bg-white/85 px-5 text-sm font-semibold text-ink transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-45 sm:flex-none";
+  const cartao = "glass-strong rounded-[2rem] p-5 shadow-xl md:p-8";
 
   return (
     <div className="space-y-6">
       <section
-        className="glass-strong rounded-[2rem] p-5 shadow-xl md:p-8"
+        ref={cartaoPartituraRef}
+        className={`${cartao} scroll-mt-4`}
         aria-labelledby="titulo-canto"
       >
         <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#a33a2c]">
               {subtitulo}
             </p>
@@ -401,19 +453,40 @@ export function CantoGregoriano() {
               {titulo}
             </h2>
           </div>
-          <label className="w-full sm:w-auto">
-            <span className={rotuloCampo}>Exemplo</span>
+          <label className="w-full sm:w-72">
+            <span className={rotuloCampo}>Partitura</span>
             <select
               className={select}
-              value={exemploId}
-              onChange={(e) => escolherExemplo(e.target.value)}
+              value={origem?.id ?? ""}
+              onChange={(e) => escolher(e.target.value)}
             >
               <option value="">Seu canto</option>
-              {EXEMPLOS_GABC.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.titulo}
-                </option>
+              <optgroup label="Exemplos">
+                {EXEMPLOS_GABC.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.titulo}
+                  </option>
+                ))}
+              </optgroup>
+              {MISSAS.map((m) => (
+                <optgroup key={m.numero} label={`Kyriale · Missa ${romano(m.numero)} · ${m.nome}`}>
+                  {partesDaMissa(m).map((p) => {
+                    const peca = pecaDaMissa(m, p);
+                    return (
+                      <option key={peca.id} value={peca.id}>
+                        {peca.titulo}
+                      </option>
+                    );
+                  })}
+                </optgroup>
               ))}
+              <optgroup label="Kyriale · Credo">
+                {PECAS_KYRIALE.filter((p) => p.id.startsWith("credo")).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.titulo}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </label>
         </div>
@@ -453,7 +526,7 @@ export function CantoGregoriano() {
                 role="radio"
                 aria-checked={timbre === t}
                 onClick={() => {
-                  tocadorRef.current?.parar();
+                  parar();
                   setTimbre(t);
                   void tocadorRef.current?.carregar(t); // já deixa o timbre carregando
                 }}
@@ -480,7 +553,7 @@ export function CantoGregoriano() {
               step={5}
               value={bpm}
               onChange={(e) => {
-                tocadorRef.current?.parar();
+                parar();
                 setBpm(Number(e.target.value));
               }}
               className="h-11 w-full cursor-pointer accent-[#1a2233]"
@@ -539,7 +612,7 @@ export function CantoGregoriano() {
             onClick={cliqueNaPartitura}
             className="canto-partitura min-h-40 w-full"
           />
-          {!pronto && !status && <p className="text-sm text-soft">Preparando a partitura…</p>}
+          {!ex && !status && <p className="text-sm text-soft">Preparando a partitura…</p>}
           {erro && (
             <p className="rounded-xl bg-[#a33a2c]/[0.08] px-4 py-3 text-sm text-[#a33a2c]">
               Não consegui ler esse código GABC. Confira se cada sílaba tem as notas entre
@@ -550,16 +623,28 @@ export function CantoGregoriano() {
         </div>
       </section>
 
-      <section
-        className="glass-strong rounded-[2rem] p-5 shadow-xl md:p-8"
-        aria-labelledby="titulo-editor"
-      >
+      <section className={cartao} aria-labelledby="titulo-kyriale">
+        <h2 id="titulo-kyriale" className="font-serif text-2xl text-ink md:text-3xl">
+          Kyriale
+        </h2>
+        <p className="mb-5 mt-1 text-soft">
+          As 18 Missas do Ordinário e os seis Credos, prontos para ler e ouvir. Escolha uma parte e
+          ela abre na partitura acima.
+        </p>
+        <BibliotecaKyriale
+          selecionado={origem?.id ?? null}
+          carregando={carregandoPeca}
+          onEscolher={escolherKyriale}
+        />
+      </section>
+
+      <section className={cartao} aria-labelledby="titulo-editor">
         <h2 id="titulo-editor" className="font-serif text-2xl text-ink md:text-3xl">
           Código GABC
         </h2>
         <p className="mb-4 mt-1 text-soft">
-          A partitura se atualiza enquanto você digita. Pode colar o arquivo .gabc inteiro, com
-          cabeçalho.
+          A partitura se atualiza enquanto você digita. Pode colar um arquivo .gabc inteiro: o
+          título, o tipo de peça e o modo saem do cabeçalho (name, office-part e mode).
         </p>
         <textarea
           value={gabc}
@@ -569,27 +654,23 @@ export function CantoGregoriano() {
           aria-label="Código GABC"
           className="block min-h-[180px] w-full resize-y rounded-2xl border border-ink/10 bg-white/90 px-4 py-4 font-mono text-sm leading-relaxed text-ink"
         />
-        <details className="mt-4">
-          <summary className="cursor-pointer py-2 text-sm font-semibold text-ink">
-            Guia rápido de GABC
-          </summary>
-          <dl className="mt-2 grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["(c4) (c3) (f3)", "Clave de Dó ou de Fá e a linha em que ela fica."],
-              ["Ky(f)", "Sílaba e nota. As letras de a a m vão do grave ao agudo."],
-              ["(fgh)", "Várias notas formam um neuma na mesma sílaba."],
-              ["(f.)", "Ponto de mora: a nota dura o dobro."],
-              ["(f_)", "Episema horizontal: a nota é alongada."],
-              ["(ix) (iy)", "Bemol e bequadro na altura indicada (aqui, i)."],
-              ["(,) (;) (:) (::)", "Barras de divisão: quarto, meia, inteira e dupla."],
-            ].map(([codigo, texto]) => (
-              <div key={codigo} className="border-t border-ink/10 py-3">
-                <dt className="mb-1 font-mono text-sm text-ink">{codigo}</dt>
-                <dd className="text-sm text-soft">{texto}</dd>
-              </div>
-            ))}
-          </dl>
-        </details>
+      </section>
+
+      <section className={cartao} aria-labelledby="titulo-guia">
+        <h2 id="titulo-guia" className="font-serif text-2xl text-ink md:text-3xl">
+          Guia visual do GABC
+        </h2>
+        <p className="mb-5 mt-1 text-soft">
+          O GABC é um jeito de escrever canto gregoriano com letras. Cada exemplo abaixo mostra o
+          código, a partitura que ele gera e o som; use o mesmo timbre e andamento escolhidos acima.
+        </p>
+        <GuiaGabc
+          ex={ex}
+          transposicao={transposicao}
+          tocandoId={tocandoId}
+          onOuvir={(id, eventos) => tocarEventos(id, eventos)}
+          onParar={parar}
+        />
       </section>
     </div>
   );
