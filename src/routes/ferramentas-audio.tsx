@@ -27,6 +27,7 @@ function AudioToolsPage() {
         <nav aria-label="Categorias de ferramentas" className="flex flex-wrap gap-2 border-b border-[var(--at-border)] pb-4">
           <Link to="/ferramentas-audio" aria-current="page" className="border-b-2 border-[var(--at-accent)] px-3 py-2 font-semibold text-[var(--at-accent)]">Ferramentas de áudio</Link>
           <Link to="/ferramentas-musicais" className="px-3 py-2 text-[var(--at-label)] hover:text-[var(--at-text)]">Ferramentas musicais</Link>
+          <Link to="/canto-gregoriano" className="px-3 py-2 text-[var(--at-label)] hover:text-[var(--at-text)]">Canto gregoriano</Link>
         </nav>
         <Recorder />
         <ReadingCalculator />

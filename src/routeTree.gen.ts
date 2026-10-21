@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CantoGregorianoRouteImport } from './routes/canto-gregoriano'
 import { Route as ComposicoesRouteImport } from './routes/composicoes'
 import { Route as FerramentasAudioRouteImport } from './routes/ferramentas-audio'
 import { Route as FerramentasMusicaisRouteImport } from './routes/ferramentas-musicais'
@@ -19,6 +20,11 @@ import { Route as TeoriaMusicalRouteImport } from './routes/teoria-musical'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CantoGregorianoRoute = CantoGregorianoRouteImport.update({
+  id: '/canto-gregoriano',
+  path: '/canto-gregoriano',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComposicoesRoute = ComposicoesRouteImport.update({
@@ -49,6 +55,7 @@ const TeoriaMusicalRoute = TeoriaMusicalRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/canto-gregoriano': typeof CantoGregorianoRoute
   '/composicoes': typeof ComposicoesRoute
   '/ferramentas-audio': typeof FerramentasAudioRoute
   '/ferramentas-musicais': typeof FerramentasMusicaisRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/canto-gregoriano': typeof CantoGregorianoRoute
   '/composicoes': typeof ComposicoesRoute
   '/ferramentas-audio': typeof FerramentasAudioRoute
   '/ferramentas-musicais': typeof FerramentasMusicaisRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/canto-gregoriano': typeof CantoGregorianoRoute
   '/composicoes': typeof ComposicoesRoute
   '/ferramentas-audio': typeof FerramentasAudioRoute
   '/ferramentas-musicais': typeof FerramentasMusicaisRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/canto-gregoriano'
     | '/composicoes'
     | '/ferramentas-audio'
     | '/ferramentas-musicais'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/canto-gregoriano'
     | '/composicoes'
     | '/ferramentas-audio'
     | '/ferramentas-musicais'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/canto-gregoriano'
     | '/composicoes'
     | '/ferramentas-audio'
     | '/ferramentas-musicais'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CantoGregorianoRoute: typeof CantoGregorianoRoute
   ComposicoesRoute: typeof ComposicoesRoute
   FerramentasAudioRoute: typeof FerramentasAudioRoute
   FerramentasMusicaisRoute: typeof FerramentasMusicaisRoute
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/canto-gregoriano': {
+      id: '/canto-gregoriano'
+      path: '/canto-gregoriano'
+      fullPath: '/canto-gregoriano'
+      preLoaderRoute: typeof CantoGregorianoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/composicoes': {
@@ -157,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CantoGregorianoRoute: CantoGregorianoRoute,
   ComposicoesRoute: ComposicoesRoute,
   FerramentasAudioRoute: FerramentasAudioRoute,
   FerramentasMusicaisRoute: FerramentasMusicaisRoute,
