@@ -283,35 +283,214 @@ export function gerarMidi(
   ]);
 }
 
+/* ---------- instrumentos ---------- */
+
+// O que o tocador precisa de cada timbre: agendar uma nota e silenciar tudo.
+interface Instrumento {
+  tocarNota(midi: number, quando: number, duracao: number): void;
+  parar(): void;
+}
+
+class InstrumentoSoundfont implements Instrumento {
+  constructor(private player: SoundfontPlayer) {}
+  tocarNota(midi: number, quando: number, duracao: number) {
+    this.player.play(midi, quando, { duration: duracao });
+  }
+  parar() {
+    this.player.stop();
+  }
+}
+
+/*
+ * Órgão de tubos amostrado: Bureå Gravkapell (Lars Palo, CC BY-SA 2.5).
+ * Cada tecla tem um arquivo de sustentação (ataque + loop) e um de release
+ * (a cauda da sala), gerados a partir do sampleset original. Só as notas
+ * usadas pelo canto são baixadas.
+ */
+const ORGAO_PRIMEIRA = 40;
+const ORGAO_ULTIMA = 82;
+const ORGAO_SEG_SUSTENTACAO = 4.5;
+const CROSSFADE = 0.05;
+
+function teclaDoOrgao(midi: number) {
+  let t = midi;
+  while (t < ORGAO_PRIMEIRA) t += 12;
+  while (t > ORGAO_ULTIMA) t -= 12;
+  return t;
+}
+
+class OrgaoAmostrado implements Instrumento {
+  private buffers = new Map<string, Promise<AudioBuffer | null>>();
+  // buffers já decodificados, para agendar as notas sem esperar
+  private cache = new Map<string, AudioBuffer>();
+  private ativos = new Set<AudioBufferSourceNode>();
+  private saida: GainNode;
+
+  constructor(
+    private ac: AudioContext,
+    private pasta: string,
+    destino: AudioNode,
+  ) {
+    // as amostras ficam em torno de -10 dB; o limitador segura a soma das notas no legato
+    this.saida = ac.createGain();
+    this.saida.gain.value = 1.8;
+    const limitador = ac.createDynamicsCompressor();
+    limitador.threshold.value = -6;
+    limitador.knee.value = 3;
+    limitador.ratio.value = 12;
+    limitador.attack.value = 0.003;
+    limitador.release.value = 0.15;
+    this.saida.connect(limitador).connect(destino);
+  }
+
+  private buffer(nome: string): Promise<AudioBuffer | null> {
+    let b = this.buffers.get(nome);
+    if (!b) {
+      b = fetch(`/orgao/${this.pasta}/${nome}.mp3`)
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.statusText))))
+        .then((dados) => this.ac.decodeAudioData(dados))
+        .catch(() => {
+          this.buffers.delete(nome);
+          return null;
+        });
+      this.buffers.set(nome, b);
+    }
+    return b;
+  }
+
+  // Baixa as notas que faltam; devolve false se alguma não carregou.
+  async carregarNotas(midis: Iterable<number>): Promise<boolean> {
+    const nomes = new Set<string>();
+    for (const m of midis) {
+      const t = teclaDoOrgao(m);
+      nomes.add(`${t}-s`);
+      nomes.add(`${t}-r`);
+    }
+    const resultados = await Promise.all(
+      [...nomes].map(async (nome) => {
+        const b = await this.buffer(nome);
+        if (b) this.cache.set(nome, b);
+        return b;
+      }),
+    );
+    return resultados.every(Boolean);
+  }
+
+  tocarNota(midi: number, quando: number, duracao: number) {
+    const tecla = teclaDoOrgao(midi);
+    const sus = this.cache.get(`${tecla}-s`);
+    const rel = this.cache.get(`${tecla}-r`);
+    if (!sus) return;
+    const fim = quando + duracao;
+
+    const fonte = this.ac.createBufferSource();
+    fonte.buffer = sus;
+    if (duracao > ORGAO_SEG_SUSTENTACAO - 0.3) {
+      // notas muito longas: repete o trecho final, que já é sustentação estável
+      fonte.loop = true;
+      fonte.loopStart = ORGAO_SEG_SUSTENTACAO - 1.5;
+      fonte.loopEnd = ORGAO_SEG_SUSTENTACAO - 0.1;
+    }
+    const g = this.ac.createGain();
+    g.gain.setValueAtTime(1, fim);
+    g.gain.linearRampToValueAtTime(0, fim + CROSSFADE);
+    fonte.connect(g).connect(this.saida);
+    fonte.start(quando);
+    fonte.stop(fim + CROSSFADE + 0.02);
+    this.registrar(fonte);
+
+    if (rel) {
+      const cauda = this.ac.createBufferSource();
+      cauda.buffer = rel;
+      const gr = this.ac.createGain();
+      gr.gain.setValueAtTime(0, fim);
+      gr.gain.linearRampToValueAtTime(1, fim + CROSSFADE);
+      cauda.connect(gr).connect(this.saida);
+      cauda.start(fim);
+      this.registrar(cauda);
+    }
+  }
+
+  private registrar(fonte: AudioBufferSourceNode) {
+    this.ativos.add(fonte);
+    fonte.onended = () => this.ativos.delete(fonte);
+  }
+
+  parar() {
+    for (const f of this.ativos) {
+      try {
+        f.stop();
+      } catch {
+        /* já parou */
+      }
+    }
+    this.ativos.clear();
+  }
+}
+
+// Reverberação leve de igreja, gerada (ruído com decaimento exponencial).
+function criarReverb(ac: AudioContext): AudioNode {
+  const seg = 2.6;
+  const n = Math.round(ac.sampleRate * seg);
+  const ir = ac.createBuffer(2, n, ac.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2);
+  }
+  const conv = ac.createConvolver();
+  conv.buffer = ir;
+  const molhado = ac.createGain();
+  molhado.gain.value = 0.22;
+  conv.connect(molhado).connect(ac.destination);
+  const entrada = ac.createGain();
+  entrada.connect(ac.destination); // som direto
+  entrada.connect(conv);
+  return entrada;
+}
+
 /* ---------- tocador ---------- */
 
-export type Timbre = "coro" | "orgao" | "piano";
+export type Timbre = "coro" | "orgao" | "orgaoPleno" | "piano";
 
-export const TIMBRES: Record<
-  Timbre,
-  { rotulo: string; soundfont: string; programa: number; ganho: number }
-> = {
-  coro: { rotulo: "Coro", soundfont: "choir_aahs", programa: 52, ganho: 2.2 },
-  orgao: { rotulo: "Órgão", soundfont: "church_organ", programa: 19, ganho: 1.4 },
-  piano: { rotulo: "Piano", soundfont: "acoustic_grand_piano", programa: 0, ganho: 1.6 },
+type Fonte = { tipo: "soundfont"; nome: string; ganho: number } | { tipo: "orgao"; pasta: string };
+
+export const TIMBRES: Record<Timbre, { rotulo: string; programa: number; fonte: Fonte }> = {
+  coro: {
+    rotulo: "Coro",
+    programa: 52,
+    fonte: { tipo: "soundfont", nome: "choir_aahs", ganho: 2.2 },
+  },
+  orgao: { rotulo: "Órgão", programa: 19, fonte: { tipo: "orgao", pasta: "orgao-suave" } },
+  orgaoPleno: {
+    rotulo: "Órgão pleno",
+    programa: 19,
+    fonte: { tipo: "orgao", pasta: "orgao-pleno" },
+  },
+  piano: {
+    rotulo: "Piano",
+    programa: 0,
+    fonte: { tipo: "soundfont", nome: "acoustic_grand_piano", ganho: 1.6 },
+  },
 };
 
 export class Tocador {
   tocando = false;
-  instrumento: SoundfontPlayer | null = null;
+  instrumento: Instrumento | null = null;
   aoMudarNota: (indice: number) => void = () => {};
   aoTerminar: () => void = () => {};
 
   private ac: AudioContext | null = null;
-  private instrumentos = new Map<Timbre, Promise<SoundfontPlayer | null>>();
+  private reverb: AudioNode | null = null;
+  private instrumentos = new Map<Timbre, Promise<Instrumento | null>>();
   private eventos: EventoNota[] = [];
   private inicioAudio = 0;
   private fimAudio = 0;
-  private segPorPulso = 0.3;
+  private segPorPulso = 0.6;
   private deslocamento = 0;
   private indiceInicial = 0;
   private osciladores: OscillatorNode[] = [];
   private raf = 0;
+  private geracao = 0;
 
   private contexto(): AudioContext {
     if (!this.ac) {
@@ -327,30 +506,38 @@ export class Tocador {
     return this.instrumentos.has(timbre);
   }
 
-  carregar(timbre: Timbre): Promise<SoundfontPlayer | null> {
+  carregar(timbre: Timbre): Promise<Instrumento | null> {
     const existente = this.instrumentos.get(timbre);
     if (existente) return existente;
     const ac = this.contexto();
-    const info = TIMBRES[timbre];
-    const promessa = carregarScript(URL_SOUNDFONT)
-      .then(() => {
-        if (!window.Soundfont) return null;
-        return window.Soundfont.instrument(ac, info.soundfont, {
-          soundfont: "MusyngKite",
-          format: "mp3",
-          gain: info.ganho,
+    const fonte = TIMBRES[timbre].fonte;
+    let promessa: Promise<Instrumento | null>;
+    if (fonte.tipo === "orgao") {
+      this.reverb ??= criarReverb(ac);
+      promessa = Promise.resolve(new OrgaoAmostrado(ac, fonte.pasta, this.reverb));
+    } else {
+      promessa = carregarScript(URL_SOUNDFONT)
+        .then(() =>
+          window.Soundfont
+            ? window.Soundfont.instrument(ac, fonte.nome, {
+                soundfont: "MusyngKite",
+                format: "mp3",
+                gain: fonte.ganho,
+              })
+            : null,
+        )
+        .then((p) => (p ? new InstrumentoSoundfont(p) : null))
+        .catch(() => null)
+        .then((inst) => {
+          if (!inst) this.instrumentos.delete(timbre);
+          return inst;
         });
-      })
-      .catch(() => null)
-      .then((inst) => {
-        if (!inst) this.instrumentos.delete(timbre);
-        return inst;
-      });
+    }
     this.instrumentos.set(timbre, promessa);
     return promessa;
   }
 
-  // Síntese simples usada quando o soundfont não carrega (sem internet, por exemplo).
+  // Síntese simples usada quando o timbre não carrega (sem internet, por exemplo).
   private sintetizar(midi: number, quando: number, duracao: number) {
     const ac = this.contexto();
     const osc = ac.createOscillator();
@@ -367,15 +554,27 @@ export class Tocador {
     this.osciladores.push(osc);
   }
 
-  async tocar(eventos: EventoNota[], opcoes: { bpm: number; timbre: Timbre; aPartirDe: number }) {
+  // Devolve true se começou a tocar (false se foi interrompido enquanto carregava).
+  async tocar(
+    eventos: EventoNota[],
+    opcoes: { bpm: number; timbre: Timbre; aPartirDe: number },
+  ): Promise<boolean> {
     this.parar(true);
+    const geracao = ++this.geracao;
     this.eventos = eventos;
     this.segPorPulso = 60 / opcoes.bpm;
     const primeiro = eventos[opcoes.aPartirDe];
     const ultimo = eventos[eventos.length - 1];
-    if (!primeiro || !ultimo) return;
+    if (!primeiro || !ultimo) return false;
 
-    const inst = await this.carregar(opcoes.timbre);
+    let inst = await this.carregar(opcoes.timbre);
+    if (inst instanceof OrgaoAmostrado) {
+      const ok = await inst.carregarNotas(eventos.slice(opcoes.aPartirDe).map((e) => e.midi));
+      if (!ok) inst = null;
+    }
+    // outro "tocar" ou "parar" aconteceu enquanto carregava
+    if (geracao !== this.geracao) return false;
+
     const ac = this.contexto();
     this.instrumento = inst;
     this.deslocamento = primeiro.inicio;
@@ -388,13 +587,14 @@ export class Tocador {
       const quando = this.inicioAudio + (e.inicio - this.deslocamento) * this.segPorPulso;
       // um pouco de sobreposição deixa o legato mais natural
       const dur = e.duracao * this.segPorPulso * 1.04;
-      if (inst) inst.play(e.midi, quando, { duration: dur });
+      if (inst) inst.tocarNota(e.midi, quando, dur);
       else this.sintetizar(e.midi, quando, dur);
     }
 
     this.fimAudio =
       this.inicioAudio + (ultimo.inicio + ultimo.duracao - this.deslocamento) * this.segPorPulso;
     this.acompanhar();
+    return true;
   }
 
   private acompanhar() {
@@ -426,8 +626,9 @@ export class Tocador {
   parar(silencioso = false) {
     const estavaTocando = this.tocando;
     this.tocando = false;
+    this.geracao++;
     cancelAnimationFrame(this.raf);
-    this.instrumento?.stop();
+    this.instrumento?.parar();
     for (const o of this.osciladores) {
       try {
         o.stop();
@@ -443,6 +644,7 @@ export class Tocador {
     this.parar(true);
     void this.ac?.close();
     this.ac = null;
+    this.reverb = null;
     this.instrumentos.clear();
   }
 }

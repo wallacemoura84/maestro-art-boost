@@ -1,0 +1,19 @@
+Amostras de órgão de tubos — Bureå Gravkapell (Bureå, Suécia)
+Órgão construído por Johannes Menzel, 1990.
+
+Amostras originais gravadas e editadas por Lars Palo (2009-2012), parte do
+sampleset "Bureå Funeral Chapel" para GrandOrgue:
+https://familjenpalo.se/vpo/download/
+
+Licença: Creative Commons Atribuição-CompartilhaIgual 2.5 (CC BY-SA 2.5, Suécia)
+https://creativecommons.org/licenses/by-sa/2.5/se/
+
+Alterações feitas a partir das amostras originais:
+- teclas 40 a 82 dos registros Gedackt 8', Rörflöjt 4' e Principal 2';
+- orgao-suave: Gedackt 8' + Rörflöjt 4' misturados;
+- orgao-pleno: Gedackt 8' + Rörflöjt 4' + Principal 2' misturados;
+- para cada tecla, "<tecla>-s.mp3" tem o ataque e o loop original repetido até
+  4,5 s, e "<tecla>-r.mp3" tem o release (a partir do marcador "cue" original);
+- volume normalizado por registração e conversão para MP3 de 96 kbps.
+
+Estes arquivos derivados são distribuídos sob a mesma licença CC BY-SA 2.5.

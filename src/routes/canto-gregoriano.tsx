@@ -64,7 +64,25 @@ function CantoGregorianoPage() {
             >
               exsurge
             </a>{" "}
-            (MIT). Timbres: soundfonts MusyngKite.
+            (MIT). Órgão: Bureå Gravkapell (Johannes Menzel, 1990), amostras gravadas por{" "}
+            <a
+              href="https://familjenpalo.se/vpo/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-ink"
+            >
+              Lars Palo
+            </a>
+            , licença{" "}
+            <a
+              href="https://creativecommons.org/licenses/by-sa/2.5/se/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-ink"
+            >
+              CC BY-SA 2.5
+            </a>{" "}
+            (mixadas e convertidas para MP3). Coro e piano: soundfonts MusyngKite.
           </p>
         </footer>
       </main>

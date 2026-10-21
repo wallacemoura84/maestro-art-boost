@@ -60,7 +60,7 @@ export function CantoGregoriano() {
   const [titulo, setTitulo] = useState(primeiroExemplo.titulo);
   const [subtitulo, setSubtitulo] = useState(primeiroExemplo.subtitulo);
   const [anotacao, setAnotacao] = useState(primeiroExemplo.anotacao);
-  const [timbre, setTimbre] = useState<Timbre>("coro");
+  const [timbre, setTimbre] = useState<Timbre>("orgao");
   // 0,6 s por nota: o Christus factus est fica em ~2min35s, perto das gravações de Solesmes
   const [bpm, setBpm] = useState(100);
   const [transposicao, setTransposicao] = useState(0);
@@ -77,6 +77,7 @@ export function CantoGregoriano() {
   const eventosRef = useRef<EventoNota[]>([]);
   const posicoesRef = useRef<(Retangulo | null)[]>([]);
   const tocadorRef = useRef<Tocador | null>(null);
+  const pedidoRef = useRef(0); // ignora respostas de cliques antigos em "Ouvir"
   const transposicaoRef = useRef(transposicao);
   transposicaoRef.current = transposicao;
 
@@ -176,6 +177,8 @@ export function CantoGregoriano() {
     const div = partituraRef.current;
     if (!score || !ctxt || !div) return;
     const largura = div.clientWidth;
+    // página escondida (largura zero): o ResizeObserver diagrama quando ela aparecer
+    if (largura < 50) return;
     score.performLayoutAsync(ctxt, () => {
       score.layoutChantLines(ctxt, largura, () => {
         div.innerHTML = score.createSvg(ctxt);
@@ -303,16 +306,31 @@ export function CantoGregoriano() {
   const tocar = (aPartirDe: number) => {
     const tocador = tocadorRef.current;
     if (!tocador || !eventosRef.current.length) return;
-    if (!tocador.jaCarregado(timbre)) setStatus("Carregando o timbre…");
+    const pedido = ++pedidoRef.current;
+    // o órgão baixa só as notas do canto; avisa se demorar
+    const aviso = setTimeout(() => {
+      if (pedido === pedidoRef.current) setStatus("Carregando o timbre…");
+    }, 150);
     setTocando(true);
-    void tocador.tocar(eventosRef.current, { bpm, timbre, aPartirDe }).then(() => {
-      setStatus(tocador.instrumento ? "" : "Sem conexão com os timbres: usando som sintetizado.");
+    void tocador.tocar(eventosRef.current, { bpm, timbre, aPartirDe }).then((iniciou) => {
+      clearTimeout(aviso);
+      if (pedido !== pedidoRef.current) return; // já houve outro clique
+      if (!iniciou) setTocando(false);
+      setStatus(
+        !iniciou || tocador.instrumento
+          ? ""
+          : "Sem conexão com os timbres: usando som sintetizado.",
+      );
     });
   };
 
   const alternar = () => {
-    if (tocadorRef.current?.tocando) tocadorRef.current.parar();
-    else tocar(0);
+    if (tocando) {
+      pedidoRef.current++;
+      tocadorRef.current?.parar();
+      setTocando(false);
+      setStatus("");
+    } else tocar(0);
   };
 
   const escolherExemplo = (id: string) => {
@@ -439,7 +457,7 @@ export function CantoGregoriano() {
                   setTimbre(t);
                   void tocadorRef.current?.carregar(t); // já deixa o timbre carregando
                 }}
-                className={`flex-1 rounded-full px-4 text-sm font-semibold transition ${
+                className={`flex-1 whitespace-nowrap rounded-full px-2 text-sm font-semibold transition sm:px-3 ${
                   timbre === t ? "bg-white text-ink shadow-sm" : "text-soft hover:text-ink"
                 }`}
               >
