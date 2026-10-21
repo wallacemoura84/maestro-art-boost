@@ -34,8 +34,8 @@ function CantoGregorianoPage() {
           <Link to="/" className="text-slate hover:text-ink">
             ← Maestro Wallace Moura
           </Link>
-          <Link to="/ferramentas-musicais" className="text-soft hover:text-ink">
-            Ferramentas musicais
+          <Link to="/composicoes" className="text-soft hover:text-ink">
+            Composições
           </Link>
         </nav>
 
@@ -64,7 +64,7 @@ function CantoGregorianoPage() {
             >
               exsurge
             </a>{" "}
-            (MIT). Timbres: soundfonts FluidR3 GM.
+            (MIT). Timbres: soundfonts MusyngKite.
           </p>
         </footer>
       </main>

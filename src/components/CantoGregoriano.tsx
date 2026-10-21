@@ -61,7 +61,8 @@ export function CantoGregoriano() {
   const [subtitulo, setSubtitulo] = useState(primeiroExemplo.subtitulo);
   const [anotacao, setAnotacao] = useState(primeiroExemplo.anotacao);
   const [timbre, setTimbre] = useState<Timbre>("coro");
-  const [bpm, setBpm] = useState(190);
+  // 0,6 s por nota: o Christus factus est fica em ~2min35s, perto das gravações de Solesmes
+  const [bpm, setBpm] = useState(100);
   const [transposicao, setTransposicao] = useState(0);
   const [tocando, setTocando] = useState(false);
   const [status, setStatus] = useState("");
@@ -449,12 +450,15 @@ export function CantoGregoriano() {
 
           <label className="min-w-[170px] flex-1 sm:max-w-[240px]">
             <span className={rotuloCampo}>
-              Andamento <output className="ml-1 tabular-nums text-ink">{bpm}</output>
+              Andamento{" "}
+              <output className="ml-1 normal-case tracking-normal tabular-nums text-ink">
+                {bpm} notas/min
+              </output>
             </span>
             <input
               type="range"
-              min={100}
-              max={300}
+              min={60}
+              max={200}
               step={5}
               value={bpm}
               onChange={(e) => {

@@ -11,6 +11,4 @@
 
 Public YouTube videos are read from the channel's official RSS feed through a public server function with a ten-minute in-memory cache; this avoids fabricated entries and keeps the list current without a credential.
 
-The metronome schedules Web Audio events ahead on the browser's AudioContext clock; subdivisions and secondary rhythms share that clock to stay aligned.
-
-Audio and musical tools have separate pages and share only their browser-side tool panels; this keeps recording/reading apart from metronome/tuner while preserving both URLs.
+The Gregorian chant page (/canto-gregoriano) loads exsurge from public/vendor and soundfont-player from unpkg only in the browser; it renders GABC to SVG and schedules notes on the AudioContext clock, so nothing chant-related runs during SSR.

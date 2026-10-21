@@ -138,8 +138,7 @@ function Index() {
                 <a href="#discografia" className="hover:text-ink">Discografia</a>
                 <a href="#pesquisa" className="hover:text-ink">Pesquisa</a>
                 <Link to="/teoria-musical" className="hover:text-ink">Curso de música</Link>
-                <Link to="/ferramentas-audio" className="hover:text-ink">Ferramentas de Áudio</Link>
-                <Link to="/ferramentas-musicais" className="hover:text-ink">Ferramentas Musicais</Link>
+                <Link to="/canto-gregoriano" className="hover:text-ink">Canto Gregoriano</Link>
                 <Link to="/composicoes" className="hover:text-ink">Composições</Link>
               </div>
               <a
@@ -169,8 +168,7 @@ function Index() {
                 <a href="#discografia" onClick={() => setMenuOpen(false)} className="py-2">Discografia</a>
                 <a href="#pesquisa" onClick={() => setMenuOpen(false)} className="py-2">Pesquisa</a>
                 <Link to="/teoria-musical" onClick={() => setMenuOpen(false)} className="py-2">Curso de música</Link>
-                <Link to="/ferramentas-audio" onClick={() => setMenuOpen(false)} className="py-2">Ferramentas de Áudio</Link>
-                <Link to="/ferramentas-musicais" onClick={() => setMenuOpen(false)} className="py-2">Ferramentas Musicais</Link>
+                <Link to="/canto-gregoriano" onClick={() => setMenuOpen(false)} className="py-2">Canto Gregoriano</Link>
                 <Link to="/composicoes" onClick={() => setMenuOpen(false)} className="py-2">Composições</Link>
                 <a href={CONTATO.agendamento} target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)} className="py-2 font-semibold">Agende uma aula ↗</a>
               </div>

@@ -136,19 +136,21 @@ export interface EventoNota {
 // Do na clave padrão do exsurge (oitava 2) vira Dó central (MIDI 60).
 const DESLOCAMENTO_MIDI = 36;
 
-// Duração, em pulsos, das pausas depois de cada tipo de divisão.
-function pausaDaDivisao(ex: ExsurgeLib, n: object): number {
-  if (n instanceof ex.DoubleBar) return 2.5;
-  if (n instanceof ex.FullBar) return 2;
-  if (n instanceof ex.HalfBar) return 1;
-  if (n instanceof ex.QuarterBar) return 0.5;
-  if (n instanceof ex.Virgula) return 0.5;
-  return 0;
+// Respiração (em pulsos) depois de cada divisão, e quanto as duas últimas
+// notas antes dela se alongam (ritardando de fim de frase).
+function divisao(ex: ExsurgeLib, n: object): { pausa: number; ritardando: number } {
+  if (n instanceof ex.DoubleBar) return { pausa: 3, ritardando: 1.3 };
+  if (n instanceof ex.FullBar) return { pausa: 2.5, ritardando: 1.3 };
+  if (n instanceof ex.HalfBar) return { pausa: 1.5, ritardando: 1.15 };
+  if (n instanceof ex.QuarterBar) return { pausa: 0.75, ritardando: 1 };
+  if (n instanceof ex.Virgula) return { pausa: 0.5, ritardando: 1 };
+  return { pausa: 0, ritardando: 1 };
 }
 
 /*
  * Cada nota vale 1 pulso; o ponto (mora) dobra a nota e o episema
- * horizontal alonga em 50%.
+ * horizontal alonga em 50%. As notas sem ponto que fecham uma frase
+ * se alongam um pouco antes da respiração.
  */
 export function extrairEventos(
   ex: ExsurgeLib,
@@ -157,6 +159,7 @@ export function extrairEventos(
 ): EventoNota[] {
   const eventos: EventoNota[] = [];
   let t = 0;
+  let aposDivisao = 0;
 
   score.notations.forEach((n, indice) => {
     if (n.isNeume && n.notes) {
@@ -176,7 +179,18 @@ export function extrairEventos(
         t += dur;
       }
     } else if (n.isDivider) {
-      t += pausaDaDivisao(ex, n);
+      const { pausa, ritardando } = divisao(ex, n);
+      // só as duas últimas notas desde a divisão anterior
+      let extra = 0;
+      for (const e of eventos.slice(Math.max(eventos.length - 2, aposDivisao))) {
+        e.inicio += extra;
+        if (e.duracao === 1 && ritardando > 1) {
+          extra += ritardando - 1;
+          e.duracao = ritardando;
+        }
+      }
+      t += extra + pausa;
+      aposDivisao = eventos.length;
     }
   });
 
@@ -322,7 +336,7 @@ export class Tocador {
       .then(() => {
         if (!window.Soundfont) return null;
         return window.Soundfont.instrument(ac, info.soundfont, {
-          soundfont: "FluidR3_GM",
+          soundfont: "MusyngKite",
           format: "mp3",
           gain: info.ganho,
         });
